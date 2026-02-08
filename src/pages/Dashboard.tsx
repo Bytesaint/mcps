@@ -1,4 +1,3 @@
-import React from 'react';
 import { Smartphone, LayoutTemplate, FolderOpen, Plus, Wand2, ArrowRight } from 'lucide-react';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';

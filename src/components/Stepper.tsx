@@ -1,4 +1,4 @@
-import React from 'react';
+import { Fragment } from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -16,7 +16,7 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
                 const isCurrent = index === currentStep;
 
                 return (
-                    <React.Fragment key={step}>
+                    <Fragment key={step}>
                         <div className="flex items-center relative z-10">
                             <div className={cn(
                                 "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors border-2",
@@ -40,7 +40,7 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
                                 index < currentStep ? "bg-blue-600" : "bg-slate-200"
                             )} />
                         )}
-                    </React.Fragment>
+                    </Fragment>
                 );
             })}
         </div>

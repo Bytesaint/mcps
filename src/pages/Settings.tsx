@@ -1,4 +1,3 @@
-import React from 'react';
 import { Palette, Database, Shield, Moon, Sun, ArrowRight, Save } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';

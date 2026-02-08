@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { LayoutTemplate, Plus, Copy, Trash2, ExternalLink, MoreVertical, FileText } from 'lucide-react';
+import { useState } from 'react';
+import { LayoutTemplate, Plus, Copy, Trash2, ExternalLink } from 'lucide-react';
 import { Button } from '../components/Button';
-import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 import { Modal } from '../components/Modal';
 import { Badge } from '../components/Badge';
@@ -135,9 +134,9 @@ export function Templates() {
                                 <div className="relative z-10 text-center p-8">
                                     <h3 className="text-3xl font-bold text-white mb-2">Comparison Preview</h3>
                                     <div className="flex gap-2 justify-center flex-wrap opacity-60">
-                                        <span className="bg-white/10 px-2 py-1 rounded text-xs text-white">{{ PHONE_A }}</span>
+                                        <span className="bg-white/10 px-2 py-1 rounded text-xs text-white">{'{PHONE_A}'}</span>
                                         <span className="text-slate-500">vs</span>
-                                        <span className="bg-white/10 px-2 py-1 rounded text-xs text-white">{{ PHONE_B }}</span>
+                                        <span className="bg-white/10 px-2 py-1 rounded text-xs text-white">{'{PHONE_B}'}</span>
                                     </div>
                                 </div>
 
@@ -171,8 +170,8 @@ export function Templates() {
                                                     <Badge variant="warning" className="text-[10px]">Static</Badge>
                                                 ) : (
                                                     <div className="flex gap-1">
-                                                        <Badge variant="secondary" className="text-[10px]">{{ PHONE_A }}</Badge>
-                                                        <Badge variant="secondary" className="text-[10px]">{{ PHONE_B }}</Badge>
+                                                        <Badge variant="secondary" className="text-[10px]">{'{PHONE_A}'}</Badge>
+                                                        <Badge variant="secondary" className="text-[10px]">{'{PHONE_B}'}</Badge>
                                                     </div>
                                                 )}
                                             </div>

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Scale, Plus, Pencil, Trash2, Search, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Scale, Plus, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';

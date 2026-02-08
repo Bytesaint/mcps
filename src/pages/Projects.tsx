@@ -1,15 +1,14 @@
-import React, { useState } from 'react';
-import { FolderOpen, Eye, Trash2, Download, Search, MoreHorizontal, Calendar } from 'lucide-react';
+import { useState } from 'react';
+import { FolderOpen, Eye, Trash2, Download, Calendar } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Modal } from '../components/Modal';
 import { Badge } from '../components/Badge';
 import { EmptyState } from '../components/EmptyState';
-import { useMock, Project } from '../mock/MockContext';
+import { useMock } from '../mock/MockContext';
 import { useToast } from '../components/Toast';
 import { ACTIONS } from '../actionMap';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '../lib/utils';
 
 export function Projects() {
     const { projects, deleteProject, phones, templates } = useMock();

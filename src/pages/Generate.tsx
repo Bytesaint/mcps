@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Smartphone, LayoutTemplate, ArrowRight, ArrowLeft, CheckCircle, GripVertical } from 'lucide-react';
+import { Smartphone, LayoutTemplate, ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Stepper } from '../components/Stepper';

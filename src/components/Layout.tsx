@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Smartphone, Scale, LayoutTemplate, Wand2, FolderOpen, Settings, Bell, Search, Menu, X } from 'lucide-react';
 import { cn } from '../lib/utils';

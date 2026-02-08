@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState } from 'react';
 import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { createPortal } from 'react-dom';

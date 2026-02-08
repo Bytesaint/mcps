@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 import { Phone, Rule, Template, Project, Spec, INITIAL_PHONES, INITIAL_RULES, INITIAL_TEMPLATES, INITIAL_PROJECTS } from './data';
 
 // Re-export types for convenience

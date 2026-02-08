@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Smartphone, Plus, Pencil, Trash2, Search, X } from 'lucide-react';
 import { Button } from '../components/Button';
-import { Card } from '../components/Card';
-import { Input } from '../components/Input'; // Need to create Input
 import { Modal } from '../components/Modal';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/Table';
 import { Badge } from '../components/Badge';
