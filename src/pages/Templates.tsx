@@ -24,6 +24,7 @@ export function Templates() {
     const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [templateToDeleteId, setTemplateToDeleteId] = useState<string | null>(null);
     const [newTemplateName, setNewTemplateName] = useState('');
 
     // Aspect Ratio State
@@ -34,6 +35,7 @@ export function Templates() {
     }, []);
 
     const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
+    const templateToDelete = templates.find(t => t.id === (templateToDeleteId || selectedTemplateId));
 
     const handleCreate = () => {
         if (!newTemplateName) return;
@@ -69,10 +71,20 @@ export function Templates() {
         toast("Template duplicated", "success");
     };
 
+    const confirmDelete = (id: string, e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        setTemplateToDeleteId(id);
+        setIsDeleteModalOpen(true);
+    };
+
     const handleDelete = () => {
-        if (selectedTemplateId) {
-            deleteTemplate(selectedTemplateId);
-            setSelectedTemplateId(null);
+        const id = templateToDeleteId || selectedTemplateId;
+        if (id) {
+            deleteTemplate(id);
+            if (selectedTemplateId === id) {
+                setSelectedTemplateId(null);
+            }
+            setTemplateToDeleteId(null);
             setIsDeleteModalOpen(false);
             toast("Template deleted", "info");
         }
@@ -82,7 +94,7 @@ export function Templates() {
         <div className="flex-1 flex flex-col min-h-0 p-4 md:p-8 overflow-y-auto lg:overflow-hidden">
             <div className="flex flex-col lg:flex-row gap-6 lg:h-full min-h-0">
                 {/* List Panel */}
-                <div className="w-full lg:w-1/3 flex flex-col gap-4 min-h-[400px] lg:min-h-0">
+                <div className="w-full lg:w-1/3 flex flex-col gap-4 min-h-[400px] lg:min-h-0 text-left">
                     <div className="flex items-center justify-between shrink-0">
                         <h2 className="text-lg font-semibold text-slate-800">My Templates</h2>
                         <Button size="sm" action={ACTIONS.MPCS_TEMPLATE_CREATE} onClick={() => setIsCreateModalOpen(true)}>
@@ -96,7 +108,7 @@ export function Templates() {
                                 key={template.id}
                                 onClick={() => setSelectedTemplateId(template.id)}
                                 className={cn(
-                                    "p-3 rounded-md cursor-pointer transition-all flex items-center gap-3 border",
+                                    "p-3 rounded-md cursor-pointer transition-all flex items-center gap-3 border group",
                                     selectedTemplateId === template.id
                                         ? "bg-purple-50 border-purple-200 shadow-sm"
                                         : "bg-white border-transparent hover:bg-slate-50 hover:border-slate-200"
@@ -114,6 +126,13 @@ export function Templates() {
                                     </p>
                                     <p className="text-xs text-slate-500">{Object.keys(template.sections).length} sections</p>
                                 </div>
+                                <button
+                                    className="p-2 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={(e) => confirmDelete(template.id, e)}
+                                    title="Delete template"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
                             </div>
                         ))}
                         {templates.length === 0 && (
@@ -282,7 +301,7 @@ export function Templates() {
                     </>
                 }
             >
-                <p className="text-slate-600">Are you sure you want to delete <span className="font-bold">{selectedTemplate?.name}</span>?</p>
+                <p className="text-slate-600 text-left">Are you sure you want to delete <span className="font-bold">{templateToDelete?.name}</span>? This action cannot be undone.</p>
             </Modal>
         </div>
     );
