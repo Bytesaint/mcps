@@ -114,9 +114,9 @@ export function Layout() {
                     </div>
                 </header>
 
-                {/* Scrollable Page Content */}
-                <main className="flex-1 overflow-y-auto bg-slate-50/50 p-4 md:p-8">
-                    <div className="max-w-7xl mx-auto space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+                {/* Page Content */}
+                <main className="flex-1 overflow-hidden bg-slate-50/50 flex flex-col min-h-0">
+                    <div className="flex-1 w-full flex flex-col min-h-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <Outlet />
                     </div>
                 </main>

@@ -1,3 +1,5 @@
+import type { AspectRatio } from '../types/aspectRatio';
+
 export interface Spec {
     key: string;
     label: string;
@@ -31,6 +33,7 @@ export interface Project {
     phoneAId: string;
     phoneBId: string;
     dateCreated: string;
+    aspectRatio?: AspectRatio;
 }
 
 export const INITIAL_PHONES: Phone[] = [

@@ -5,13 +5,15 @@ import { Modal } from '../components/Modal';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/Table';
 import { Badge } from '../components/Badge';
 import { EmptyState } from '../components/EmptyState';
-import { useMock, Phone, Spec } from '../mock/MockContext';
+import { useAppStore } from '../store/appStore';
+import type { Phone, PhoneSpec as Spec } from '../types/models';
 import { useToast } from '../components/Toast';
 import { ACTIONS } from '../actionMap';
 import { cn } from '../lib/utils';
 
 export function Phones() {
-    const { phones, addPhone, updatePhone, deletePhone } = useMock();
+    const { state, addPhone, updatePhone, deletePhone } = useAppStore();
+    const { phones } = state;
     const { toast } = useToast();
     const [selectedPhoneId, setSelectedPhoneId] = useState<string | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -27,7 +29,7 @@ export function Phones() {
 
     const handleAdd = () => {
         setEditingPhone({
-            id: Math.random().toString(36).substr(2, 9),
+            id: Math.random().toString(36).substring(2, 11),
             name: '',
             brand: '',
             specs: []
@@ -69,7 +71,7 @@ export function Phones() {
         if (!editingPhone) return;
         setEditingPhone({
             ...editingPhone,
-            specs: [...editingPhone.specs, { key: '', label: '', value: '' }]
+            specs: [...editingPhone.specs, { id: Math.random().toString(36).substring(2, 11), key: '', label: '', value: '' }]
         });
     };
 
@@ -81,116 +83,128 @@ export function Phones() {
     };
 
     return (
-        <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)]">
-            {/* List Panel */}
-            <div className="w-full lg:w-1/3 flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-slate-800">Phones directory</h2>
-                    <Button size="sm" action={ACTIONS.MPCS_PHONES_ADD} onClick={handleAdd}>
-                        <Plus className="w-4 h-4 mr-2" /> Add
-                    </Button>
-                </div>
+        <div className="flex-1 flex flex-col min-h-0 p-4 md:p-8 overflow-y-auto lg:overflow-hidden text-left">
+            <div className="flex flex-col lg:flex-row gap-6 lg:h-full min-h-0">
+                {/* List Panel */}
+                <div className="w-full lg:w-1/3 flex flex-col gap-4 min-h-[400px] lg:min-h-0">
+                    <div className="flex items-center justify-between shrink-0">
+                        <h2 className="text-lg font-semibold text-slate-800">Phones directory</h2>
+                        <Button size="sm" action={ACTIONS.MPCS_PHONES_ADD} onClick={handleAdd}>
+                            <Plus className="w-4 h-4 mr-2" /> Add
+                        </Button>
+                    </div>
 
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                        type="text"
-                        placeholder="Search phones..."
-                        className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                    />
-                </div>
-
-                <div className="flex-1 overflow-y-auto bg-white rounded-lg border border-slate-200 shadow-sm">
-                    {phones.length === 0 ? (
-                        <EmptyState
-                            icon={Smartphone}
-                            title="No phones yet"
-                            description="Add your first phone to get started"
-                            actionLabel="Add Phone"
-                            actionId={ACTIONS.MPCS_PHONES_ADD}
-                            onAction={handleAdd}
+                    <div className="relative shrink-0">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Search phones..."
+                            className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                         />
-                    ) : (
-                        <div className="divide-y divide-slate-100">
-                            {phones.map(phone => (
-                                <div
-                                    key={phone.id}
-                                    onClick={() => setSelectedPhoneId(phone.id)}
-                                    className={cn(
-                                        "p-4 cursor-pointer transition-colors hover:bg-slate-50 flex items-center justify-between",
-                                        selectedPhoneId === phone.id && "bg-blue-50/50 hover:bg-blue-50 border-l-4 border-blue-500 pl-3"
-                                    )}
-                                >
-                                    <div>
-                                        <p className="font-medium text-slate-900">{phone.name}</p>
-                                        <p className="text-xs text-slate-500">{phone.brand} • {phone.specs.length} specs</p>
+                    </div>
+
+                    <div className="flex-1 lg:overflow-y-auto bg-white rounded-lg border border-slate-200 shadow-sm">
+                        {phones.length === 0 ? (
+                            <EmptyState
+                                icon={Smartphone}
+                                title="No phones yet"
+                                description="Add your first phone to get started"
+                                actionLabel="Add Phone"
+                                actionId={ACTIONS.MPCS_PHONES_ADD}
+                                onAction={handleAdd}
+                            />
+                        ) : (
+                            <div className="divide-y divide-slate-100">
+                                {phones.map(phone => (
+                                    <div
+                                        key={phone.id}
+                                        onClick={() => setSelectedPhoneId(phone.id)}
+                                        className={cn(
+                                            "p-4 cursor-pointer transition-colors hover:bg-slate-50 flex items-center justify-between",
+                                            selectedPhoneId === phone.id && "bg-blue-50/50 hover:bg-blue-50 border-l-4 border-blue-500 pl-3"
+                                        )}
+                                    >
+                                        <div className="min-w-0">
+                                            <p className="font-medium text-slate-900 truncate">{phone.name}</p>
+                                            <p className="text-xs text-slate-500">{phone.brand} • {phone.specs.length} specs</p>
+                                        </div>
+                                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                                            <Smartphone className="w-4 h-4" />
+                                        </div>
                                     </div>
-                                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                                        <Smartphone className="w-4 h-4" />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Details Panel */}
+                <div className="flex-1 bg-white rounded-lg border border-slate-200 shadow-sm flex flex-col min-h-[500px] lg:min-h-0 overflow-hidden text-left">
+                    {selectedPhone ? (
+                        <>
+                            <div className="p-6 border-b border-slate-100 shrink-0">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                                                <Smartphone className="w-6 h-6" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h2 className="text-xl font-bold text-slate-900 truncate">{selectedPhone.name}</h2>
+                                                <p className="text-sm text-slate-500">{selectedPhone.brand}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2 shrink-0">
+                                        <Button variant="secondary" action={ACTIONS.MPCS_PHONES_EDIT} onClick={() => handleEdit(selectedPhone)}>
+                                            <Pencil className="w-4 h-4 mr-2" /> Edit
+                                        </Button>
+                                        <Button variant="danger" action={ACTIONS.MPCS_PHONES_DELETE} onClick={() => setIsDeleteModalOpen(true)}>
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
                                     </div>
                                 </div>
-                            ))}
+                            </div>
+
+                            <div className="p-6 overflow-y-auto flex-1 min-h-0">
+                                <h3 className="text-sm font-semibold text-slate-900 mb-4 uppercase tracking-wider">Specifications</h3>
+                                <div className="border rounded-lg overflow-hidden">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Spec Key</TableHead>
+                                                <TableHead>Label</TableHead>
+                                                <TableHead>Value</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {selectedPhone.specs.map((spec, i) => (
+                                                <TableRow key={i}>
+                                                    <TableCell className="font-mono text-xs text-slate-500">{spec.key}</TableCell>
+                                                    <TableCell className="font-medium">{spec.label}</TableCell>
+                                                    <TableCell>{spec.value}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                            {selectedPhone.specs.length === 0 && (
+                                                <TableRow>
+                                                    <TableCell colSpan={3} className="text-center text-slate-400 py-8">No specs defined</TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="flex-1 flex items-center justify-center p-8">
+                            <EmptyState
+                                icon={Smartphone}
+                                title="Select a phone"
+                                description="View properties and manage specifications"
+                            />
                         </div>
                     )}
                 </div>
-            </div>
-
-            {/* Details Panel */}
-            <div className="flex-1 bg-white rounded-lg border border-slate-200 shadow-sm flex flex-col">
-                {selectedPhone ? (
-                    <>
-                        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                            <div>
-                                <div className="flex items-center gap-3 mb-1">
-                                    <h2 className="text-xl font-bold text-slate-900">{selectedPhone.name}</h2>
-                                    <Badge variant="secondary">{selectedPhone.brand}</Badge>
-                                </div>
-                                <p className="text-sm text-slate-500">ID: {selectedPhone.id}</p>
-                            </div>
-                            <div className="flex gap-2">
-                                <Button variant="secondary" action={ACTIONS.MPCS_PHONES_EDIT} onClick={() => handleEdit(selectedPhone)}>
-                                    <Pencil className="w-4 h-4 mr-2" /> Edit
-                                </Button>
-                                <Button variant="danger" action={ACTIONS.MPCS_PHONES_DELETE} onClick={() => setIsDeleteModalOpen(true)}>
-                                    <Trash2 className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        </div>
-
-                        <div className="p-6 overflow-y-auto flex-1">
-                            <h3 className="text-sm font-semibold text-slate-900 mb-4 uppercase tracking-wider">Specifications</h3>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Spec Key</TableHead>
-                                        <TableHead>Label</TableHead>
-                                        <TableHead>Value</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {selectedPhone.specs.map((spec, i) => (
-                                        <TableRow key={i}>
-                                            <TableCell className="font-mono text-xs text-slate-500">{spec.key}</TableCell>
-                                            <TableCell className="font-medium">{spec.label}</TableCell>
-                                            <TableCell>{spec.value}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                    {selectedPhone.specs.length === 0 && (
-                                        <TableRow>
-                                            <TableCell colSpan={3} className="text-center text-slate-400 py-8">No specs defined</TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </>
-                ) : (
-                    <EmptyState
-                        icon={Smartphone}
-                        title="Select a phone"
-                        description="View properties and manage specifications"
-                    />
-                )}
             </div>
 
             {/* Edit/Add Modal */}
@@ -207,8 +221,8 @@ export function Phones() {
                 }
             >
                 {editingPhone && (
-                    <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-6 text-left">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Phone Name</label>
                                 <input
@@ -306,7 +320,7 @@ export function Phones() {
                     </>
                 }
             >
-                <p className="text-slate-600">Are you sure you want to delete <span className="font-bold">{selectedPhone?.name}</span>? This action cannot be undone.</p>
+                <p className="text-slate-600 text-left">Are you sure you want to delete <span className="font-bold">{selectedPhone?.name}</span>? This action cannot be undone.</p>
             </Modal>
         </div>
     );

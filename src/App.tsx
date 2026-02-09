@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { MockProvider } from './mock/MockContext';
+import { AppStoreProvider } from './store/appStore';
 import { ToastProvider } from './components/Toast';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
@@ -8,12 +8,17 @@ import { Rules } from './pages/Rules';
 import { Templates } from './pages/Templates';
 import { Generate } from './pages/Generate';
 import { Projects } from './pages/Projects';
+import { ProjectDetail } from './pages/ProjectDetail';
 import { Settings } from './pages/Settings';
+import { ensureSeedData } from './storage/seed';
+
+// Initialize seed data on app load
+ensureSeedData();
 
 function App() {
     return (
         <ToastProvider>
-            <MockProvider>
+            <AppStoreProvider>
                 <Router>
                     <Routes>
                         <Route element={<Layout />}>
@@ -33,21 +38,13 @@ function App() {
                             } />
                             <Route path="/generate" element={<Generate />} />
                             <Route path="/projects" element={<Projects />} />
-                            <Route path="/projects/:id" element={
-                                <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-                                    <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4 text-emerald-500">
-                                        <span className="text-3xl font-bold">View</span>
-                                    </div>
-                                    <h2 className="text-2xl font-bold text-slate-800 mb-2">Project Details View</h2>
-                                    <p className="text-slate-500 max-w-md">Detailed breakdown and export options will available in Phase 2.</p>
-                                </div>
-                            } />
+                            <Route path="/projects/:id" element={<ProjectDetail />} />
                             <Route path="/settings" element={<Settings />} />
                             <Route path="*" element={<Navigate to="/" replace />} />
                         </Route>
                     </Routes>
                 </Router>
-            </MockProvider>
+            </AppStoreProvider>
         </ToastProvider>
     );
 }
