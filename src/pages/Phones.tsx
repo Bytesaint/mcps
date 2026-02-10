@@ -3,7 +3,6 @@ import { Smartphone, Plus, Pencil, Trash2, Search, X } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/Table';
-import { Badge } from '../components/Badge';
 import { EmptyState } from '../components/EmptyState';
 import { useAppStore } from '../store/appStore';
 import type { Phone, PhoneSpec as Spec } from '../types/models';
