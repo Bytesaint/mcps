@@ -116,6 +116,13 @@ export const ACTIONS = {
     MPCS_GENERATE_SCENE_SELECT: "MPCS_GENERATE_SCENE_SELECT",
     MPCS_GENERATE_SCENE_TEXT_EDIT: "MPCS_GENERATE_SCENE_TEXT_EDIT",
     MPCS_GENERATE_SCENE_RESET: "MPCS_GENERATE_SCENE_RESET",
+
+    // Video Player
+    MPCS_PLAYER_PLAY_PAUSE: "MPCS_PLAYER_PLAY_PAUSE",
+    MPCS_PLAYER_NEXT: "MPCS_PLAYER_NEXT",
+    MPCS_PLAYER_PREV: "MPCS_PLAYER_PREV",
+    MPCS_PLAYER_SEEK: "MPCS_PLAYER_SEEK",
+    MPCS_PLAYER_SPEED_CHANGE: "MPCS_PLAYER_SPEED_CHANGE",
 } as const;
 
 export type ActionId = typeof ACTIONS[keyof typeof ACTIONS];
@@ -240,4 +247,11 @@ export const ACTION_DESCRIPTIONS: Record<ActionId, string> = {
     MPCS_GENERATE_SCENE_SELECT: "Select Scene for Inspection",
     MPCS_GENERATE_SCENE_TEXT_EDIT: "Edit Scene Text Content",
     MPCS_GENERATE_SCENE_RESET: "Reset Scene to Auto-generated Content",
+
+    // Video Player
+    MPCS_PLAYER_PLAY_PAUSE: "Play or Pause Video Preview",
+    MPCS_PLAYER_NEXT: "Advance to Next Scene",
+    MPCS_PLAYER_PREV: "Return to Previous Scene",
+    MPCS_PLAYER_SEEK: "Seek to Position in Preview",
+    MPCS_PLAYER_SPEED_CHANGE: "Change Playback Speed",
 };

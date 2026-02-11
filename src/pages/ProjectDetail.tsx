@@ -10,6 +10,8 @@ import PreviewContent from '../components/PreviewContent';
 import { useState, useEffect } from 'react';
 import { playSfx, playMusic, stopMusic } from '../audio/player';
 import { cn } from '../lib/utils';
+import { useVideoPreviewPlayer } from '../preview/player/useVideoPreviewPlayer';
+import { PlayerBar } from '../preview/player/PlayerBar';
 
 export function ProjectDetail() {
     const { id } = useParams<{ id: string }>();
@@ -24,6 +26,28 @@ export function ProjectDetail() {
     // Interactive Preview State
     const [activeSceneKey, setActiveSceneKey] = useState<string>('intro');
     const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+
+    const scenes = template ? Object.keys(template.sections).map(key => ({ type: key })) : [];
+    const activeSceneIndex = scenes.findIndex(s => s.type === activeSceneKey);
+
+    const {
+        isPlaying,
+        togglePlay,
+        next,
+        prev,
+        seek,
+        progressPercent,
+        speed,
+        setSpeed,
+        overallElapsedMs,
+        totalDurationMs
+    } = useVideoPreviewPlayer({
+        scenes: scenes,
+        currentIndex: activeSceneIndex >= 0 ? activeSceneIndex : 0,
+        setCurrentIndex: (idx) => {
+            if (scenes[idx]) setActiveSceneKey(scenes[idx].type);
+        }
+    });
 
     // Initial scene
     useEffect(() => {
@@ -191,36 +215,51 @@ export function ProjectDetail() {
                                     </div>
                                 </div>
 
-                                <div className="flex-1 relative">
-                                    <PreviewStage
-                                        aspectRatio={aspectRatio}
-                                        animation={project.previewSettings?.animation}
-                                        activeSceneId={activeSceneKey}
-                                    >
-                                        <PreviewContent
-                                            sceneKey={activeSceneKey}
-                                            template={template || undefined}
-                                            phoneA={phoneA || undefined}
-                                            phoneB={phoneB || undefined}
-                                            rules={state.rules}
-                                        />
+                                <div className="flex-1 space-y-4">
+                                    <PlayerBar
+                                        isPlaying={isPlaying}
+                                        onTogglePlay={togglePlay}
+                                        onNext={next}
+                                        onPrev={prev}
+                                        progressPercent={progressPercent}
+                                        onSeek={seek}
+                                        overallElapsedMs={overallElapsedMs}
+                                        totalDurationMs={totalDurationMs}
+                                        speed={speed}
+                                        onSpeedChange={setSpeed}
+                                        disabled={!template}
+                                    />
+                                    <div className="relative">
+                                        <PreviewStage
+                                            aspectRatio={aspectRatio}
+                                            animation={project.previewSettings?.animation}
+                                            activeSceneId={activeSceneKey}
+                                        >
+                                            <PreviewContent
+                                                sceneKey={activeSceneKey}
+                                                template={template || undefined}
+                                                phoneA={phoneA || undefined}
+                                                phoneB={phoneB || undefined}
+                                                rules={state.rules}
+                                            />
 
-                                        {/* Music Widget */}
-                                        <div className="absolute bottom-4 right-4 z-30">
-                                            <button
-                                                onClick={handleMusicToggle}
-                                                className={cn(
-                                                    "p-3 rounded-xl border transition-all flex items-center gap-2 backdrop-blur-md text-[10px] font-black uppercase tracking-widest",
-                                                    isMusicPlaying
-                                                        ? "bg-blue-500/20 border-blue-500 text-blue-400"
-                                                        : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-white/20"
-                                                )}
-                                            >
-                                                <Music2 className="w-4 h-4" />
-                                                {isMusicPlaying ? "Music ON" : "Music OFF"}
-                                            </button>
-                                        </div>
-                                    </PreviewStage>
+                                            {/* Music Widget */}
+                                            <div className="absolute bottom-4 right-4 z-30">
+                                                <button
+                                                    onClick={handleMusicToggle}
+                                                    className={cn(
+                                                        "p-3 rounded-xl border transition-all flex items-center gap-2 backdrop-blur-md text-[10px] font-black uppercase tracking-widest",
+                                                        isMusicPlaying
+                                                            ? "bg-blue-500/20 border-blue-500 text-blue-400"
+                                                            : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-white/20"
+                                                    )}
+                                                >
+                                                    <Music2 className="w-4 h-4" />
+                                                    {isMusicPlaying ? "Music ON" : "Music OFF"}
+                                                </button>
+                                            </div>
+                                        </PreviewStage>
+                                    </div>
                                 </div>
                             </div>
                         </div>

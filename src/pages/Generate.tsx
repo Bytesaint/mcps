@@ -15,6 +15,8 @@ import PreviewStage from '../components/PreviewStage';
 import PreviewContent from '../components/PreviewContent';
 import DEFAULT_ANIMATION_SETTINGS, { AnimationSettings } from '../preview/animations';
 import { playSfx, playMusic, stopMusic } from '../audio/player';
+import { useVideoPreviewPlayer } from '../preview/player/useVideoPreviewPlayer';
+import { PlayerBar } from '../preview/player/PlayerBar';
 
 const STEPS = ['Select Template', 'Select Phones', 'Preview & Save'];
 
@@ -38,9 +40,31 @@ export function Generate() {
     const [activeSceneKey, setActiveSceneKey] = useState<string>('intro');
     const [sceneOverrides, setSceneOverrides] = useState<Record<string, string>>({});
 
+    const template = state.templates.find(t => t.id === selectedTemplateId);
+    const scenes = template ? Object.keys(template.sections).map(key => ({ type: key })) : [];
+    const activeSceneIndex = scenes.findIndex(s => s.type === activeSceneKey);
+
+    const {
+        isPlaying,
+        togglePlay,
+        next,
+        prev,
+        seek,
+        progressPercent,
+        speed,
+        setSpeed,
+        overallElapsedMs,
+        totalDurationMs
+    } = useVideoPreviewPlayer({
+        scenes: scenes,
+        currentIndex: activeSceneIndex >= 0 ? activeSceneIndex : 0,
+        setCurrentIndex: (idx) => {
+            if (scenes[idx]) setActiveSceneKey(scenes[idx].type);
+        }
+    });
+
     useEffect(() => {
         if (!useProjectOverride) {
-            const template = state.templates.find(t => t.id === selectedTemplateId);
             if (template?.useAspectRatioOverride && template.aspectRatio) {
                 setAspectRatio(template.aspectRatio);
             } else {
@@ -94,8 +118,6 @@ export function Generate() {
         toast("Project generated successfully", "success");
         navigate('/projects');
     };
-
-    const template = state.templates.find(t => t.id === selectedTemplateId);
 
     // Audio Effect Logic
     useEffect(() => {
@@ -262,7 +284,22 @@ export function Generate() {
                     )}
                 </div>
 
-                <div className="space-y-8">
+                <div className="space-y-4">
+                    {/* Player Control Bar */}
+                    <PlayerBar
+                        isPlaying={isPlaying}
+                        onTogglePlay={togglePlay}
+                        onNext={next}
+                        onPrev={prev}
+                        progressPercent={progressPercent}
+                        onSeek={seek}
+                        overallElapsedMs={overallElapsedMs}
+                        totalDurationMs={totalDurationMs}
+                        speed={speed}
+                        onSpeedChange={setSpeed}
+                        disabled={!template}
+                    />
+
                     {/* Preview Area */}
                     <div className="relative">
                         <PreviewStage
