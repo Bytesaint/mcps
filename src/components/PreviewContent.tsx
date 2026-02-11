@@ -50,12 +50,12 @@ export default function PreviewContent({
 
         return (
             <div className={cn(
-                "flex flex-col items-center gap-6 transition-all duration-500 w-full h-full",
+                "flex flex-col items-center gap-6 transition-all duration-500",
                 side === 'A' ? "animate-in slide-in-from-left-8 duration-700" : "animate-in slide-in-from-right-8 duration-700",
                 isLoser ? "opacity-40 scale-90 grayscale" : "opacity-100 scale-100"
             )}>
                 <div className={cn(
-                    "w-full h-full rounded-[2rem] border-[6px] shadow-2xl relative overflow-hidden flex items-center justify-center transition-all duration-500",
+                    "w-48 h-80 rounded-[2rem] border-[6px] shadow-2xl relative overflow-hidden flex items-center justify-center transition-all duration-500",
                     isWinner ? "border-green-500 ring-4 ring-green-500/30" : "border-slate-700",
                     "bg-gradient-to-b from-slate-800 to-black"
                 )}>
@@ -89,38 +89,23 @@ export default function PreviewContent({
     };
 
     return (
-        <div className="w-full h-full p-6 bg-slate-950/20 relative overflow-hidden flex items-center justify-center">
-            <div className="grid h-full w-full grid-cols-[1fr_auto_1fr] items-center gap-8 max-w-6xl mx-auto">
-                {/* Side A */}
-                <div className="flex justify-center min-w-0 h-full items-center">
-                    <div className="w-full max-w-[220px] sm:max-w-[260px] md:max-w-[320px] aspect-[9/16]">
-                        {renderPhoneCard(phoneA, 'A')}
-                    </div>
+        <div className="flex w-full h-full items-center justify-around px-8 bg-slate-950/20 relative">
+            {renderPhoneCard(phoneA, 'A')}
+            <div className="flex flex-col items-center gap-4 z-20">
+                <div className="text-4xl font-black text-blue-500 italic drop-shadow-xl">VS</div>
+                <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 text-white text-xs font-bold uppercase tracking-[0.2em]">
+                    {sceneKey}
                 </div>
-
-                {/* VS Center */}
-                <div className="flex flex-col items-center gap-4 z-20 shrink-0">
-                    <div className="text-4xl font-black text-blue-500 italic drop-shadow-xl">VS</div>
-                    <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 text-white text-[10px] font-bold uppercase tracking-[0.2em] whitespace-nowrap">
-                        {sceneKey}
+                {winner === 'TIE' && (
+                    <div className="flex items-center gap-1 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                        <AlertTriangle className="w-3 h-3" /> TIE
                     </div>
-                    {winner === 'TIE' && (
-                        <div className="flex items-center gap-1 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-                            <AlertTriangle className="w-3 h-3" /> TIE
-                        </div>
-                    )}
-                </div>
-
-                {/* Side B */}
-                <div className="flex justify-center min-w-0 h-full items-center">
-                    <div className="w-full max-w-[220px] sm:max-w-[260px] md:max-w-[320px] aspect-[9/16]">
-                        {renderPhoneCard(phoneB, 'B')}
-                    </div>
-                </div>
+                )}
             </div>
+            {renderPhoneCard(phoneB, 'B')}
 
             {(reason || captionOverride) && (
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm px-4 py-2 rounded-full border border-white/10 text-white/70 text-[11px] font-medium max-w-[70%] text-center shadow-xl">
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/10 text-white/60 text-[10px] font-medium max-w-[80%] text-center truncate">
                     {captionOverride || reason}
                 </div>
             )}
