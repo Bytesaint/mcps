@@ -15,7 +15,7 @@ import {
     saveAppearanceSetting,
     Appearance
 } from '../store/settingsStore';
-import { applyTheme } from '../lib/theme';
+import { applyAppearance } from '../theme/applyTheme';
 import {
     Volume2, Music, Trash2, Play, Check, AlertCircle, Headphones,
     Upload, Settings as SettingsIcon, FileJson
@@ -56,7 +56,7 @@ export function Settings() {
     const handleSave = () => {
         saveAudioSettings(audioSettings);
         saveAppearanceSetting(appearance);
-        applyTheme(appearance);
+        applyAppearance(appearance);
         toast("Settings saved successfully", "success");
     };
 

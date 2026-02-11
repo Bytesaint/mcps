@@ -103,8 +103,8 @@ export default function PreviewStage({
             <div
                 ref={containerRef}
                 className={cn(
-                    "w-full max-w-4xl mx-auto overflow-auto custom-scrollbar flex items-center justify-center p-4 transition-colors",
-                    isFullscreen ? "bg-black h-screen max-w-none" : "bg-slate-50 rounded-xl border border-slate-200 min-h-[300px] flex-1 min-h-0 min-w-0"
+                    "w-full max-w-4xl mx-auto overflow-auto custom-scrollbar flex items-center justify-center p-4 transition-colors min-h-0",
+                    isFullscreen ? "fixed inset-0 z-[60] bg-black/95 w-screen h-screen max-w-none p-8" : "bg-slate-50 dark:bg-slate-900/20 rounded-xl border border-slate-200 dark:border-slate-800 min-h-[400px]"
                 )}
             >
                 <div
@@ -112,8 +112,8 @@ export default function PreviewStage({
                     style={{
                         aspectRatio: `${ratio}`,
                         width: isFullscreen ? "auto" : "100%",
-                        height: isFullscreen ? "90vh" : "auto",
-                        maxHeight: isFullscreen ? "none" : "70vh",
+                        height: isFullscreen ? "85vh" : "auto",
+                        maxWidth: isFullscreen ? "90vw" : "none",
                         transform: `scale(${zoom})`,
                     }}
                 >

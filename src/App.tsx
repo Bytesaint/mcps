@@ -11,13 +11,15 @@ import { Projects } from './pages/Projects';
 import { ProjectDetail } from './pages/ProjectDetail';
 import { Settings } from './pages/Settings';
 import { ensureSeedData } from './storage/seed';
-import { applyTheme, initThemeListener } from './lib/theme';
+import { initThemeListener } from './lib/theme';
+import { applyAppearance } from './theme/applyTheme';
+import { getAppearanceSetting } from './store/settingsStore';
 
 // Initialize seed data on app load
 ensureSeedData();
 
 // Initialize theme
-applyTheme();
+applyAppearance(getAppearanceSetting());
 initThemeListener();
 
 function App() {
