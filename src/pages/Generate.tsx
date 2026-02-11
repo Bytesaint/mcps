@@ -285,21 +285,6 @@ export function Generate() {
                 </div>
 
                 <div className="space-y-4">
-                    {/* Player Control Bar */}
-                    <PlayerBar
-                        isPlaying={isPlaying}
-                        onTogglePlay={togglePlay}
-                        onNext={next}
-                        onPrev={prev}
-                        progressPercent={progressPercent}
-                        onSeek={seek}
-                        overallElapsedMs={overallElapsedMs}
-                        totalDurationMs={totalDurationMs}
-                        speed={speed}
-                        onSpeedChange={setSpeed}
-                        disabled={!template}
-                    />
-
                     {/* Preview Area */}
                     <div className="relative">
                         <PreviewStage
@@ -340,6 +325,23 @@ export function Generate() {
                                 </button>
                             </div>
                         </PreviewStage>
+                    </div>
+
+                    {/* Player Control Bar */}
+                    <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                        <PlayerBar
+                            isPlaying={isPlaying}
+                            onTogglePlay={togglePlay}
+                            onNext={next}
+                            onPrev={prev}
+                            progressPercent={progressPercent}
+                            onSeek={seek}
+                            overallElapsedMs={overallElapsedMs}
+                            totalDurationMs={totalDurationMs}
+                            speed={speed}
+                            onSpeedChange={setSpeed}
+                            disabled={!template}
+                        />
                     </div>
 
                     {/* Scene Sequence Grid */}

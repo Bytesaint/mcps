@@ -216,19 +216,6 @@ export function ProjectDetail() {
                                 </div>
 
                                 <div className="flex-1 space-y-4">
-                                    <PlayerBar
-                                        isPlaying={isPlaying}
-                                        onTogglePlay={togglePlay}
-                                        onNext={next}
-                                        onPrev={prev}
-                                        progressPercent={progressPercent}
-                                        onSeek={seek}
-                                        overallElapsedMs={overallElapsedMs}
-                                        totalDurationMs={totalDurationMs}
-                                        speed={speed}
-                                        onSpeedChange={setSpeed}
-                                        disabled={!template}
-                                    />
                                     <div className="relative">
                                         <PreviewStage
                                             aspectRatio={aspectRatio}
@@ -259,6 +246,22 @@ export function ProjectDetail() {
                                                 </button>
                                             </div>
                                         </PreviewStage>
+                                    </div>
+
+                                    <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                                        <PlayerBar
+                                            isPlaying={isPlaying}
+                                            onTogglePlay={togglePlay}
+                                            onNext={next}
+                                            onPrev={prev}
+                                            progressPercent={progressPercent}
+                                            onSeek={seek}
+                                            overallElapsedMs={overallElapsedMs}
+                                            totalDurationMs={totalDurationMs}
+                                            speed={speed}
+                                            onSpeedChange={setSpeed}
+                                            disabled={!template}
+                                        />
                                     </div>
                                 </div>
                             </div>
