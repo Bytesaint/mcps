@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Smartphone, Plus, Pencil, Trash2, Search, X } from 'lucide-react';
+import { Smartphone, Plus, Pencil, Trash2, Search, X, Image as ImageIcon, Upload } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/Table';
@@ -81,6 +81,30 @@ export function Phones() {
         setEditingPhone({ ...editingPhone, specs: newSpecs });
     };
 
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !editingPhone) return;
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setEditingPhone({
+                ...editingPhone,
+                image: {
+                    name: file.name,
+                    dataUrl: reader.result as string
+                }
+            });
+            toast("Image uploaded", "success");
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleImageRemove = () => {
+        if (!editingPhone) return;
+        setEditingPhone({ ...editingPhone, image: undefined });
+        toast("Image removed", "info");
+    };
+
     return (
         <div className="flex-1 flex flex-col min-h-0 p-4 md:p-8 overflow-y-auto lg:overflow-hidden text-left">
             <div className="flex flex-col lg:flex-row gap-6 lg:h-full min-h-0">
@@ -127,8 +151,12 @@ export function Phones() {
                                             <p className="font-medium text-slate-900 truncate">{phone.name}</p>
                                             <p className="text-xs text-slate-500">{phone.brand} • {phone.specs.length} specs</p>
                                         </div>
-                                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
-                                            <Smartphone className="w-4 h-4" />
+                                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 overflow-hidden border border-slate-200">
+                                            {phone.image ? (
+                                                <img src={phone.image.dataUrl} alt={phone.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <Smartphone className="w-4 h-4" />
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -145,8 +173,12 @@ export function Phones() {
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
-                                                <Smartphone className="w-6 h-6" />
+                                            <div className="w-16 h-16 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 overflow-hidden border border-slate-200 shadow-sm">
+                                                {selectedPhone.image ? (
+                                                    <img src={selectedPhone.image.dataUrl} alt={selectedPhone.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <Smartphone className="w-8 h-8" />
+                                                )}
                                             </div>
                                             <div className="min-w-0">
                                                 <h2 className="text-xl font-bold text-slate-900 truncate">{selectedPhone.name}</h2>
@@ -241,6 +273,61 @@ export function Phones() {
                                     className="w-full px-3 py-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                                     placeholder="e.g. Apple"
                                 />
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <label className="block text-sm font-medium text-slate-700">Phone Image</label>
+                            <div className="flex items-start gap-4">
+                                <div className="w-24 h-24 rounded-lg bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-400 overflow-hidden relative group">
+                                    {editingPhone.image ? (
+                                        <>
+                                            <img src={editingPhone.image.dataUrl} alt="Preview" className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <button
+                                                    onClick={handleImageRemove}
+                                                    data-action={ACTIONS.MPCS_PHONES_IMAGE_REMOVE}
+                                                    className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <ImageIcon className="w-8 h-8 opacity-20" />
+                                    )}
+                                </div>
+                                <div className="flex-1 space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <label className="cursor-pointer">
+                                            <div
+                                                className="px-3 py-1.5 bg-white border border-slate-200 rounded-md text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2 shadow-sm"
+                                                data-action={ACTIONS.MPCS_PHONES_IMAGE_UPLOAD}
+                                            >
+                                                <Upload className="w-3.5 h-3.5" />
+                                                {editingPhone.image ? 'Change Image' : 'Upload Image'}
+                                            </div>
+                                            <input
+                                                type="file"
+                                                className="hidden"
+                                                accept="image/*"
+                                                onChange={handleImageUpload}
+                                            />
+                                        </label>
+                                        {editingPhone.image && (
+                                            <button
+                                                onClick={handleImageRemove}
+                                                className="text-xs text-red-500 hover:underline"
+                                            >
+                                                Remove
+                                            </button>
+                                        )}
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 leading-relaxed">
+                                        JPEG, PNG or WebP. Store locally as base64.<br />
+                                        Recommend 1000x1000px for best preview quality.
+                                    </p>
+                                </div>
                             </div>
                         </div>
 

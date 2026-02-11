@@ -92,7 +92,13 @@ export function Rules() {
                                     <TableCell className="font-mono text-slate-600">{rule.specKey}</TableCell>
                                     <TableCell>
                                         <Badge
-                                            variant={rule.ruleType === 'higher_wins' ? 'success' : rule.ruleType === 'lower_wins' ? 'warning' : 'outline'}
+                                            variant={
+                                                rule.ruleType === 'higher_wins' ? 'success' :
+                                                    rule.ruleType === 'lower_wins' ? 'warning' :
+                                                        rule.ruleType === 'alphanumeric' ? 'default' :
+                                                            rule.ruleType === 'ranking' ? 'secondary' :
+                                                                'outline'
+                                            }
                                             className="capitalize"
                                         >
                                             {rule.ruleType.replace('_', ' ')}
@@ -156,14 +162,84 @@ export function Rules() {
                             <label className="block text-sm font-medium text-slate-700 mb-1">Comparison Logic</label>
                             <select
                                 className="w-full px-3 py-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                                data-action={ACTIONS.MPCS_RULES_TYPE_CHANGE}
                                 value={editingRule.ruleType}
-                                onChange={e => setEditingRule({ ...editingRule, ruleType: e.target.value as 'higher_wins' | 'lower_wins' | 'manual' })}
+                                onChange={e => setEditingRule({
+                                    ...editingRule,
+                                    ruleType: e.target.value as any,
+                                    options: e.target.value === 'alphanumeric' ? { alphaMode: 'high_number_wins' } :
+                                        e.target.value === 'ranking' ? { rankingList: [], rankingDirection: 'ascending' } :
+                                            undefined
+                                })}
                             >
                                 <option value="higher_wins">Higher Value Wins (e.g. Battery, Storage)</option>
                                 <option value="lower_wins">Lower Value Wins (e.g. Price, Weight)</option>
+                                <option value="alphanumeric">Alphanumeric (e.g. Android 14 &gt; 13)</option>
+                                <option value="ranking">Ranking / Hierarchy (e.g. LCD &lt; AMOLED)</option>
                                 <option value="manual">Manual Decision</option>
                             </select>
                         </div>
+
+                        {editingRule.ruleType === 'alphanumeric' && (
+                            <div className="space-y-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                <h4 className="text-sm font-semibold text-slate-900">Alphanumeric Options</h4>
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-600 mb-1">Alpha Mode</label>
+                                    <select
+                                        className="w-full px-2 py-1.5 text-sm rounded border border-slate-300 bg-white"
+                                        data-action={ACTIONS.MPCS_RULES_ALPHA_MODE_CHANGE}
+                                        value={editingRule.options?.alphaMode || 'high_number_wins'}
+                                        onChange={e => setEditingRule({
+                                            ...editingRule,
+                                            options: { ...editingRule.options, alphaMode: e.target.value as any }
+                                        })}
+                                    >
+                                        <option value="high_number_wins">High number wins (Default)</option>
+                                        <option value="low_number_wins">Low number wins (Rare specs)</option>
+                                    </select>
+                                    <p className="text-[10px] text-slate-500 mt-1 italic">
+                                        Example: Android 14 &gt; Android 13
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {editingRule.ruleType === 'ranking' && (
+                            <div className="space-y-4 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
+                                <h4 className="text-sm font-semibold text-blue-900">Ranking Hierarchy</h4>
+                                <div>
+                                    <label className="block text-xs font-medium text-blue-700 mb-1">Ranking List (One per line)</label>
+                                    <textarea
+                                        className="w-full px-2 py-1.5 text-sm rounded border border-slate-300 bg-white font-sans min-h-[100px]"
+                                        data-action={ACTIONS.MPCS_RULES_RANKING_LIST_EDIT}
+                                        placeholder="LCD&#10;AMOLED&#10;OLED"
+                                        value={editingRule.options?.rankingList?.join('\n') || ''}
+                                        onChange={e => setEditingRule({
+                                            ...editingRule,
+                                            options: { ...editingRule.options, rankingList: e.target.value.split('\n').filter(l => l.trim() !== '') }
+                                        })}
+                                    />
+                                    <p className="text-[10px] text-blue-600 mt-1 italic">
+                                        Earlier items = Lower Rank. Later items = Higher Rank.
+                                    </p>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-blue-700 mb-1">Direction</label>
+                                    <select
+                                        className="w-full px-2 py-1.5 text-sm rounded border border-slate-300 bg-white"
+                                        data-action={ACTIONS.MPCS_RULES_RANKING_DIR_CHANGE}
+                                        value={editingRule.options?.rankingDirection || 'ascending'}
+                                        onChange={e => setEditingRule({
+                                            ...editingRule,
+                                            options: { ...editingRule.options, rankingDirection: e.target.value as any }
+                                        })}
+                                    >
+                                        <option value="ascending">Ascending (Later wins)</option>
+                                        <option value="descending">Descending (Earlier wins)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </Modal>
