@@ -12,6 +12,7 @@ import { cn } from '../lib/utils';
 import type { AspectRatio, AspectRatioPreset } from '../types/aspectRatio';
 import { getDefaultAspectRatioSetting } from '../store/settingsStore';
 import PreviewStage from '../components/PreviewStage';
+import { Music, Play, Volume2, FileJson } from 'lucide-react';
 
 const STEPS = ['Select Template', 'Select Phones', 'Preview & Save'];
 
@@ -114,8 +115,16 @@ export function Generate() {
                         ))}
                     </select>
                     {phoneAId && (
-                        <div className="bg-slate-50 p-4 rounded-lg flex items-center justify-center">
-                            <Smartphone className="w-12 h-12 text-slate-400" />
+                        <div className="bg-slate-50 p-4 rounded-lg flex items-center justify-center border border-slate-200 shadow-inner min-h-[120px]">
+                            {state.phones.find(p => p.id === phoneAId)?.image ? (
+                                <img
+                                    src={state.phones.find(p => p.id === phoneAId)?.image?.dataUrl || ''}
+                                    className="w-full h-24 object-contain rounded"
+                                    alt="Phone A"
+                                />
+                            ) : (
+                                <Smartphone className="w-12 h-12 text-slate-300" />
+                            )}
                         </div>
                     )}
                 </div>
@@ -140,8 +149,16 @@ export function Generate() {
                         ))}
                     </select>
                     {phoneBId && (
-                        <div className="bg-slate-50 p-4 rounded-lg flex items-center justify-center">
-                            <Smartphone className="w-12 h-12 text-slate-400" />
+                        <div className="bg-slate-50 p-4 rounded-lg flex items-center justify-center border border-slate-200 shadow-inner min-h-[120px]">
+                            {state.phones.find(p => p.id === phoneBId)?.image ? (
+                                <img
+                                    src={state.phones.find(p => p.id === phoneBId)?.image?.dataUrl || ''}
+                                    className="w-full h-24 object-contain rounded"
+                                    alt="Phone B"
+                                />
+                            ) : (
+                                <Smartphone className="w-12 h-12 text-slate-300" />
+                            )}
                         </div>
                     )}
                 </div>
@@ -216,18 +233,114 @@ export function Generate() {
                     </div>
 
                     {/* Preview Stage */}
-                    <div className="flex-1">
+                    <div className="flex-1 space-y-6">
                         <PreviewStage aspectRatio={aspectRatio} showGrid={false}>
-                            <div className="text-center text-white">
-                                <h1 className="text-4xl font-bold mb-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                                    {state.phones.find((p) => p.id === phoneAId)?.name}
-                                </h1>
-                                <p className="text-2xl text-slate-400 mb-8">VS</p>
-                                <h1 className="text-4xl font-bold animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-                                    {state.phones.find((p) => p.id === phoneBId)?.name}
-                                </h1>
+                            <div className="flex w-full h-full items-center justify-around px-8">
+                                {/* Phone A Preview Card */}
+                                <div className="flex flex-col items-center gap-6 animate-in slide-in-from-left-8 duration-700">
+                                    <div className="w-48 h-80 bg-gradient-to-b from-slate-800 to-black rounded-[2rem] border-[6px] border-slate-700 shadow-2xl relative overflow-hidden flex items-center justify-center">
+                                        {state.phones.find(p => p.id === phoneAId)?.image ? (
+                                            <img
+                                                src={state.phones.find(p => p.id === phoneAId)?.image?.dataUrl || ''}
+                                                alt="Phone A"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="bg-slate-900 w-full h-full flex items-center justify-center text-slate-700 font-bold text-xs uppercase tracking-widest">NO IMAGE</div>
+                                        )}
+                                        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 h-4 bg-slate-700 rounded-full" />
+                                    </div>
+                                    <h1 className="text-3xl font-black text-white drop-shadow-lg text-center">
+                                        {state.phones.find((p) => p.id === phoneAId)?.name}
+                                    </h1>
+                                </div>
+
+                                <div className="text-4xl font-black text-blue-500 italic drop-shadow-xl z-20">VS</div>
+
+                                {/* Phone B Preview Card */}
+                                <div className="flex flex-col items-center gap-6 animate-in slide-in-from-right-8 duration-700">
+                                    <div className="w-48 h-80 bg-gradient-to-b from-slate-800 to-black rounded-[2rem] border-[6px] border-slate-700 shadow-2xl relative overflow-hidden flex items-center justify-center">
+                                        {state.phones.find(p => p.id === phoneBId)?.image ? (
+                                            <img
+                                                src={state.phones.find(p => p.id === phoneBId)?.image?.dataUrl || ''}
+                                                alt="Phone B"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="bg-slate-900 w-full h-full flex items-center justify-center text-slate-700 font-bold text-xs uppercase tracking-widest">NO IMAGE</div>
+                                        )}
+                                        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 h-4 bg-slate-700 rounded-full" />
+                                    </div>
+                                    <h1 className="text-3xl font-black text-white drop-shadow-lg text-center">
+                                        {state.phones.find((p) => p.id === phoneBId)?.name}
+                                    </h1>
+                                </div>
                             </div>
                         </PreviewStage>
+
+                        {/* Phase 2B Placeholders Section */}
+                        <div className="bg-slate-900 rounded-xl p-6 border border-slate-800 shadow-xl overflow-hidden relative">
+                            <div className="absolute top-0 right-0 p-2">
+                                <span className="text-[10px] font-bold text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded uppercase tracking-widest">Phase 2B Preview</span>
+                            </div>
+                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6">Advanced Generation Settings</h4>
+
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                                {/* Animations */}
+                                <div className="group opacity-50 cursor-not-allowed" title="Available after Phase 2 balance">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <Play className="w-4 h-4 text-slate-500" />
+                                        <span className="text-sm font-semibold text-slate-300">Animations</span>
+                                    </div>
+                                    <div className="w-full h-10 bg-slate-800 rounded-lg border border-slate-700 flex items-center px-3 justify-between">
+                                        <span className="text-xs text-slate-500">None</span>
+                                        <div className="w-8 h-4 bg-slate-700 rounded-full relative">
+                                            <div className="absolute top-0.5 left-0.5 w-3 h-3 bg-slate-600 rounded-full" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Audio Scoring */}
+                                <div className="group opacity-50 cursor-not-allowed" title="Available after Phase 2 balance">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <Volume2 className="w-4 h-4 text-slate-500" />
+                                        <span className="text-sm font-semibold text-slate-300">Audio Scoring</span>
+                                    </div>
+                                    <div className="w-full h-10 bg-slate-800 rounded-lg border border-slate-700 flex items-center px-3 justify-between">
+                                        <span className="text-xs text-slate-500">Disabled</span>
+                                        <div className="w-8 h-4 bg-slate-700 rounded-full relative">
+                                            <div className="absolute top-0.5 left-0.5 w-3 h-3 bg-slate-600 rounded-full" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Background Music */}
+                                <div className="group opacity-50 cursor-not-allowed" title="Available after Phase 2 balance">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <Music className="w-4 h-4 text-slate-500" />
+                                        <span className="text-sm font-semibold text-slate-300">Music</span>
+                                    </div>
+                                    <div className="w-full h-10 bg-slate-800 rounded-lg border border-slate-700 flex items-center px-3 justify-between">
+                                        <span className="text-xs text-slate-500 text-truncate">Default Beat</span>
+                                    </div>
+                                </div>
+
+                                {/* JSON Export */}
+                                <div className="group opacity-50 cursor-not-allowed" title="Available after Phase 2 balance">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <FileJson className="w-4 h-4 text-slate-500" />
+                                        <span className="text-sm font-semibold text-slate-300">JSON Project</span>
+                                    </div>
+                                    <div className="w-full h-10 bg-slate-800 rounded-lg border border-slate-700 flex items-center px-3 justify-center gap-2">
+                                        <span className="text-xs text-slate-500">Import/Export</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p className="text-[10px] text-slate-600 mt-6 italic text-center border-t border-slate-800 pt-4">
+                                These features are locked. Please complete Phase 2 balance to enable advanced kinetic rendering and audio integration.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
