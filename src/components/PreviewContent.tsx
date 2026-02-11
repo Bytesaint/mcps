@@ -9,6 +9,7 @@ interface PreviewContentProps {
     phoneA?: Phone;
     phoneB?: Phone;
     rules: Rule[];
+    captionOverride?: string;
 }
 
 export default function PreviewContent({
@@ -16,7 +17,8 @@ export default function PreviewContent({
     template,
     phoneA,
     phoneB,
-    rules
+    rules,
+    captionOverride
 }: PreviewContentProps) {
     if (!template || !phoneA || !phoneB) return (
         <div className="flex w-full h-full items-center justify-center text-slate-500 font-bold uppercase tracking-widest bg-slate-950/20">
@@ -61,7 +63,7 @@ export default function PreviewContent({
                         <img
                             src={phone.image.dataUrl}
                             alt={phone.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                         />
                     ) : (
                         <div className="bg-slate-900 w-full h-full flex items-center justify-center text-slate-700 font-bold text-xs uppercase tracking-widest">NO IMAGE</div>
@@ -102,9 +104,9 @@ export default function PreviewContent({
             </div>
             {renderPhoneCard(phoneB, 'B')}
 
-            {reason && (
+            {(reason || captionOverride) && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/10 text-white/60 text-[10px] font-medium max-w-[80%] text-center truncate">
-                    {reason}
+                    {captionOverride || reason}
                 </div>
             )}
         </div>

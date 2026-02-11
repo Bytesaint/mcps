@@ -2,6 +2,9 @@ import type { AspectRatio } from "../types/aspectRatio";
 import { getDefaultAspectRatio } from "../types/aspectRatio";
 
 const STORAGE_KEY = "mpcs_settings_aspectRatio";
+const THEME_KEY = "mpcs_settings_appearance";
+
+export type Appearance = "light" | "dark" | "system";
 
 /**
  * Get the default aspect ratio from localStorage
@@ -28,4 +31,18 @@ export function saveDefaultAspectRatio(ar: AspectRatio): void {
     } catch (error) {
         console.error("Failed to save aspect ratio to localStorage:", error);
     }
+}
+
+/**
+ * Get appearance setting
+ */
+export function getAppearanceSetting(): Appearance {
+    return (localStorage.getItem(THEME_KEY) as Appearance) || "light";
+}
+
+/**
+ * Save appearance setting
+ */
+export function saveAppearanceSetting(appearance: Appearance): void {
+    localStorage.setItem(THEME_KEY, appearance);
 }

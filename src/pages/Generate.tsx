@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Smartphone, LayoutTemplate, ArrowRight, ArrowLeft, CheckCircle, Music2, Sparkles, Layers, Clock } from 'lucide-react';
+import { Smartphone, LayoutTemplate, ArrowRight, ArrowLeft, CheckCircle, Music2, Sparkles, Layers, Clock, Info, RotateCcw } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Stepper } from '../components/Stepper';
@@ -36,12 +36,18 @@ export function Generate() {
     // Phase 2B Preview State
     const [animationSettings, setAnimationSettings] = useState<AnimationSettings>(DEFAULT_ANIMATION_SETTINGS);
     const [activeSceneKey, setActiveSceneKey] = useState<string>('intro');
+    const [sceneOverrides, setSceneOverrides] = useState<Record<string, string>>({});
 
     useEffect(() => {
         if (!useProjectOverride) {
-            setAspectRatio(getDefaultAspectRatioSetting());
+            const template = state.templates.find(t => t.id === selectedTemplateId);
+            if (template?.useAspectRatioOverride && template.aspectRatio) {
+                setAspectRatio(template.aspectRatio);
+            } else {
+                setAspectRatio(getDefaultAspectRatioSetting());
+            }
         }
-    }, [useProjectOverride]);
+    }, [useProjectOverride, selectedTemplateId, state.templates]);
 
     const handleNext = () => {
         if (currentStep < STEPS.length - 1) {
@@ -62,6 +68,11 @@ export function Generate() {
         const phoneA = state.phones.find(p => p.id === phoneAId);
         const phoneB = state.phones.find(p => p.id === phoneBId);
 
+        const scenes = template ? Object.keys(template.sections).map(key => ({
+            type: key as any,
+            contextOverrides: sceneOverrides[key] ? { caption: sceneOverrides[key] } : undefined
+        })) : [];
+
         const project: Project = {
             id: Math.random().toString(36).substring(2, 11),
             name: projectName || `${phoneA?.name || 'Phone A'} vs ${phoneB?.name || 'Phone B'}`,
@@ -75,7 +86,8 @@ export function Generate() {
                 animation: animationSettings,
                 audioEnabled: true,
                 audioVolume: 0.8,
-            }
+            },
+            scenes: scenes
         };
 
         addProject(project);
@@ -291,6 +303,7 @@ export function Generate() {
                                     phoneA={state.phones.find(p => p.id === phoneAId)}
                                     phoneB={state.phones.find(p => p.id === phoneBId)}
                                     rules={state.rules}
+                                    captionOverride={sceneOverrides[activeSceneKey]}
                                 />
                             </div>
 
@@ -370,6 +383,56 @@ export function Generate() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Scene Inspector */}
+                        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                            <div className="flex items-center justify-between border-b pb-3">
+                                <div className="flex items-center gap-2 font-bold text-slate-800 uppercase tracking-wider text-sm">
+                                    <Info className="w-4 h-4 text-purple-500" />
+                                    Scene Inspector: <span className="text-purple-600 font-black">{activeSceneKey}</span>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        const newOverrides = { ...sceneOverrides };
+                                        delete newOverrides[activeSceneKey];
+                                        setSceneOverrides(newOverrides);
+                                    }}
+                                    disabled={!sceneOverrides[activeSceneKey]}
+                                    className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 hover:text-red-500 disabled:opacity-0 transition-all uppercase tracking-widest"
+                                    data-action={ACTIONS.MPCS_GENERATE_SCENE_RESET}
+                                >
+                                    <RotateCcw className="w-3 h-3" /> Reset to Auto
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start text-left">
+                                <div className="space-y-3">
+                                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest text-left">Description</h4>
+                                    <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100 text-left">
+                                        {activeSceneKey === 'intro' && "Opening slide showing both devices side-by-side with names."}
+                                        {activeSceneKey === 'subintro' && "Quick overview or category context slide."}
+                                        {activeSceneKey === 'score' && "Final result slide with total score or conclusion."}
+                                        {activeSceneKey !== 'intro' && activeSceneKey !== 'subintro' && activeSceneKey !== 'score' &&
+                                            `Comparison slide for "${activeSceneKey}". Displays specs, highlights the winner, and explains the reason.`}
+                                    </p>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center justify-between">
+                                        Caption / Logic Override
+                                        {sceneOverrides[activeSceneKey] && <span className="bg-purple-100 text-purple-600 px-2 py-0.5 rounded text-[9px]">MANUAL</span>}
+                                    </label>
+                                    <textarea
+                                        value={sceneOverrides[activeSceneKey] || ""}
+                                        onChange={(e) => setSceneOverrides({ ...sceneOverrides, [activeSceneKey]: e.target.value })}
+                                        placeholder="Enter manual text to override auto-generated content..."
+                                        className="w-full h-24 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
+                                        data-action={ACTIONS.MPCS_GENERATE_SCENE_TEXT_EDIT}
+                                    />
+                                    <p className="text-[10px] text-slate-400 italic">Leave blank to use engine auto-logic based on rules.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -377,7 +440,7 @@ export function Generate() {
     };
 
     return (
-        <div className="flex-1 flex flex-col p-4 md:p-8 overflow-y-auto">
+        <div className="flex-1 flex flex-col p-4 md:p-8 overflow-y-auto min-h-0">
             <div className="max-w-5xl mx-auto w-full space-y-8">
                 <div className="mb-8 text-left">
                     <h2 className="text-2xl font-bold text-slate-900 mb-2">Create New Project</h2>
@@ -386,8 +449,8 @@ export function Generate() {
                     </div>
                 </div>
 
-                <Card className="min-h-[400px] flex flex-col text-left">
-                    <div className="flex-1 p-4">
+                <Card className="min-h-[400px] flex flex-col text-left flex-1 min-h-0">
+                    <div className="flex-1 p-4 overflow-y-auto min-h-0">
                         {currentStep === 0 && renderStep1()}
                         {currentStep === 1 && renderStep2()}
                         {currentStep === 2 && renderStep3()}

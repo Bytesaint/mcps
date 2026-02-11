@@ -24,7 +24,7 @@ export function Layout() {
     };
 
     return (
-        <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
+        <div className="flex h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 overflow-hidden">
             {/* Mobile Sidebar Overlay */}
             {isMobileMenuOpen && (
                 <div
@@ -35,13 +35,13 @@ export function Layout() {
 
             {/* Sidebar (Desktop & Mobile) */}
             <aside className={cn(
-                "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 md:relative md:translate-x-0",
+                "fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-transform duration-300 md:relative md:translate-x-0",
                 isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
             )}>
-                <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100 shrink-0">
+                <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100 dark:border-slate-800 shrink-0">
                     <div className="flex items-center">
                         <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl mr-3">M</div>
-                        <span className="text-xl font-bold tracking-tight text-slate-800">MPCS</span>
+                        <span className="text-xl font-bold tracking-tight text-slate-800 dark:text-white">MPCS</span>
                     </div>
                     <button
                         className="md:hidden text-slate-400 hover:text-slate-600"
@@ -61,8 +61,8 @@ export function Layout() {
                             className={({ isActive }) => cn(
                                 "flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                                 isActive
-                                    ? "bg-blue-50 text-blue-700"
-                                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                                    ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
                             )}
                         >
                             <item.icon className="w-5 h-5 mr-3 opacity-75" />
@@ -71,16 +71,16 @@ export function Layout() {
                     ))}
                 </nav>
 
-                <div className="p-4 border-t border-slate-100 shrink-0">
+                <div className="p-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
                     <div className="text-xs text-slate-400 font-medium">MPCS • Phase 2B Preview</div>
-                    <div className="text-[10px] text-slate-300 mt-1">v0.2.0 • Phase 2B</div>
+                    <div className="text-[10px] text-slate-300 dark:text-slate-500 mt-1">v0.2.0 • Phase 2B</div>
                 </div>
             </aside>
 
             {/* Main Content Wrapper */}
             <div className="flex-1 flex flex-col w-full">
                 {/* Header */}
-                <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 z-10">
+                <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-8 shrink-0 z-10">
                     <div className="flex items-center gap-4">
                         <button
                             className="md:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg"
@@ -89,8 +89,8 @@ export function Layout() {
                             <Menu className="w-6 h-6" />
                         </button>
 
-                        <h1 className="text-lg md:text-xl font-semibold text-slate-800 truncate">{getPageTitle()}</h1>
-                        <span className="hidden md:inline-flex px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-medium border border-blue-100 capitalize">
+                        <h1 className="text-lg md:text-xl font-semibold text-slate-800 dark:text-white truncate">{getPageTitle()}</h1>
+                        <span className="hidden md:inline-flex px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-xs font-medium border border-blue-100 dark:border-blue-800 capitalize">
                             Phase 2B Preview
                         </span>
                     </div>
@@ -101,12 +101,12 @@ export function Layout() {
                             <input
                                 type="text"
                                 placeholder="Search..."
-                                className="pl-9 pr-4 py-2 w-64 rounded-full border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                className="pl-9 pr-4 py-2 w-64 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                             />
                         </div>
-                        <button className="w-9 h-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-colors relative">
+                        <button className="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors relative">
                             <Bell className="w-4 h-4" />
-                            <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full border-2 border-white"></span>
+                            <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
                         </button>
                         <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-sm cursor-pointer">
                             JD
@@ -115,7 +115,7 @@ export function Layout() {
                 </header>
 
                 {/* Page Content */}
-                <main className="flex-1 overflow-hidden bg-slate-50/50 flex flex-col min-h-0">
+                <main className="flex-1 overflow-hidden bg-slate-50/50 dark:bg-slate-950 flex flex-col min-h-0">
                     <div className="flex-1 w-full flex flex-col min-h-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <Outlet />
                     </div>

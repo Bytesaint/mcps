@@ -11,9 +11,14 @@ import { Projects } from './pages/Projects';
 import { ProjectDetail } from './pages/ProjectDetail';
 import { Settings } from './pages/Settings';
 import { ensureSeedData } from './storage/seed';
+import { applyTheme, initThemeListener } from './lib/theme';
 
 // Initialize seed data on app load
 ensureSeedData();
+
+// Initialize theme
+applyTheme();
+initThemeListener();
 
 function App() {
     return (

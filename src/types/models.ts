@@ -43,9 +43,20 @@ export interface Template {
     id: string;
     name: string;
     aspectRatio?: AspectRatio;
+    useAspectRatioOverride?: boolean;
     placeholders: string[];
     sections: TemplateSections;
     updatedAt: string; // ISO string
+}
+
+export interface SceneContextOverride {
+    caption?: string;
+    // can expand for more visual overrides in Phase 3
+}
+
+export interface ProjectScene {
+    type: keyof TemplateSections;
+    contextOverrides?: SceneContextOverride;
 }
 
 export interface PreviewSettings {
@@ -65,6 +76,7 @@ export interface Project {
     phoneBId: string;
     aspectRatioOverride?: AspectRatio;
     previewSettings?: PreviewSettings;
+    scenes?: ProjectScene[]; // For scene inspector overrides
     createdAt: string; // ISO string
     updatedAt: string; // ISO string
 }

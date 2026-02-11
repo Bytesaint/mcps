@@ -15,9 +15,10 @@ import type { AspectRatio, AspectRatioPreset } from '../types/aspectRatio';
 import { formatAspectRatio } from '../types/aspectRatio';
 import { getDefaultAspectRatioSetting } from '../store/settingsStore';
 import PreviewStage from '../components/PreviewStage';
+import { Settings as SettingsIcon } from 'lucide-react';
 
 export function Templates() {
-    const { state, addTemplate, deleteTemplate } = useAppStore();
+    const { state, addTemplate, updateTemplate, deleteTemplate } = useAppStore();
     const { templates } = state;
     const { toast } = useToast();
     const navigate = useNavigate();
@@ -31,8 +32,14 @@ export function Templates() {
     const [aspectRatio, setAspectRatio] = useState<AspectRatio>(() => getDefaultAspectRatioSetting());
 
     useEffect(() => {
-        setAspectRatio(getDefaultAspectRatioSetting());
-    }, []);
+        if (selectedTemplate) {
+            if (selectedTemplate.useAspectRatioOverride && selectedTemplate.aspectRatio) {
+                setAspectRatio(selectedTemplate.aspectRatio);
+            } else {
+                setAspectRatio(getDefaultAspectRatioSetting());
+            }
+        }
+    }, [selectedTemplateId, templates]);
 
     const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
     const templateToDelete = templates.find(t => t.id === (templateToDeleteId || selectedTemplateId));
@@ -169,20 +176,54 @@ export function Templates() {
                                 </div>
 
                                 {/* Aspect Ratio Selector */}
-                                <div className="flex items-center gap-3">
-                                    <label className="text-sm font-medium text-slate-700 text-nowrap">Preview Ratio:</label>
-                                    <select
-                                        value={aspectRatio.preset}
-                                        onChange={(e) => setAspectRatio({ preset: e.target.value as AspectRatioPreset })}
-                                        className="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
-                                        data-action={ACTIONS.MPCS_GENERATE_ASPECT_RATIO_CHANGE}
-                                    >
-                                        <option value="16:9">16:9 (Landscape)</option>
-                                        <option value="9:16">9:16 (Portrait)</option>
-                                        <option value="1:1">1:1 (Square)</option>
-                                        <option value="4:5">4:5 (Instagram Portrait)</option>
-                                        <option value="3:4">3:4 (Classic Portrait)</option>
-                                    </select>
+                                <div className="flex flex-col gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 mb-6">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <SettingsIcon className="w-4 h-4 text-slate-400" />
+                                            <span className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Preview Configuration</span>
+                                        </div>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedTemplate.useAspectRatioOverride || false}
+                                                onChange={(e) => {
+                                                    updateTemplate({
+                                                        ...selectedTemplate,
+                                                        useAspectRatioOverride: e.target.checked
+                                                    });
+                                                }}
+                                                className="w-4 h-4 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
+                                                data-action={ACTIONS.MPCS_TEMPLATE_ASPECT_OVERRIDE_TOGGLE}
+                                            />
+                                            <span className="text-sm font-medium text-slate-700">Override for this template</span>
+                                        </label>
+                                    </div>
+
+                                    {selectedTemplate.useAspectRatioOverride && (
+                                        <div className="flex items-center gap-3 pt-3 border-t border-slate-200">
+                                            <label className="text-sm font-medium text-slate-700 text-nowrap">Template Ratio:</label>
+                                            <select
+                                                value={selectedTemplate.aspectRatio?.preset || '16:9'}
+                                                onChange={(e) => {
+                                                    updateTemplate({
+                                                        ...selectedTemplate,
+                                                        aspectRatio: { preset: e.target.value as AspectRatioPreset }
+                                                    });
+                                                }}
+                                                className="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
+                                                data-action={ACTIONS.MPCS_TEMPLATE_ASPECT_OVERRIDE_CHANGE}
+                                            >
+                                                <option value="16:9">16:9 (Landscape)</option>
+                                                <option value="9:16">9:16 (Portrait)</option>
+                                                <option value="1:1">1:1 (Square)</option>
+                                                <option value="4:5">4:5 (Instagram Portrait)</option>
+                                                <option value="3:4">3:4 (Classic Portrait)</option>
+                                            </select>
+                                        </div>
+                                    )}
+                                    {!selectedTemplate.useAspectRatioOverride && (
+                                        <p className="text-xs text-slate-500 italic">Currently following global app default: {formatAspectRatio(getDefaultAspectRatioSetting())}</p>
+                                    )}
                                 </div>
                             </div>
 

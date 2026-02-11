@@ -104,7 +104,7 @@ export default function PreviewStage({
                 ref={containerRef}
                 className={cn(
                     "w-full max-w-4xl mx-auto overflow-auto custom-scrollbar flex items-center justify-center p-4 transition-colors",
-                    isFullscreen ? "bg-black h-screen max-w-none" : "bg-slate-50 rounded-xl border border-slate-200 min-h-[400px]"
+                    isFullscreen ? "bg-black h-screen max-w-none" : "bg-slate-50 rounded-xl border border-slate-200 min-h-[300px] flex-1 min-h-0 min-w-0"
                 )}
             >
                 <div

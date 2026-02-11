@@ -8,7 +8,14 @@ import { useToast } from '../components/Toast';
 import { useState, useEffect } from 'react';
 import type { AspectRatio, AspectRatioPreset } from '../types/aspectRatio';
 import { formatAspectRatio, isValidCustomRatio } from '../types/aspectRatio';
-import { getDefaultAspectRatioSetting, saveDefaultAspectRatio } from '../store/settingsStore';
+import {
+    getDefaultAspectRatioSetting,
+    saveDefaultAspectRatio,
+    getAppearanceSetting,
+    saveAppearanceSetting,
+    Appearance
+} from '../store/settingsStore';
+import { applyTheme } from '../lib/theme';
 import {
     Volume2, Music, Trash2, Play, Check, AlertCircle, Headphones,
     Upload, Settings as SettingsIcon, FileJson
@@ -30,6 +37,9 @@ export function Settings() {
     const [customW, setCustomW] = useState<string>(aspectRatio.customW?.toString() || '16');
     const [customH, setCustomH] = useState<string>(aspectRatio.customH?.toString() || '9');
 
+    // Appearance State
+    const [appearance, setAppearance] = useState<Appearance>(() => getAppearanceSetting());
+
     // Audio settings state
     const [audioSettings, setAudioSettings] = useState<AudioSettingsType>(() => getAudioSettings());
     const [audioAssets, setAudioAssets] = useState<AudioAssets>(() => getAudioAssets());
@@ -45,6 +55,8 @@ export function Settings() {
 
     const handleSave = () => {
         saveAudioSettings(audioSettings);
+        saveAppearanceSetting(appearance);
+        applyTheme(appearance);
         toast("Settings saved successfully", "success");
     };
 
@@ -204,19 +216,47 @@ export function Settings() {
                                 <p className="text-sm text-slate-500 mb-4">Customize the look and feel of the workspace.</p>
 
                                 <div className="flex gap-4">
-                                    <div className="border-2 border-blue-500 rounded-lg p-4 w-32 cursor-pointer bg-blue-50/50">
+                                    <div
+                                        onClick={() => setAppearance('light')}
+                                        className={cn(
+                                            "border-2 rounded-lg p-4 w-32 cursor-pointer transition-all",
+                                            appearance === 'light' ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20" : "border-slate-200 dark:border-slate-700 hover:border-blue-300"
+                                        )}
+                                        data-action={ACTIONS.MPCS_SETTINGS_APPEARANCE_CHANGE}
+                                    >
                                         <div className="flex items-center gap-2 mb-2">
-                                            <Sun className="w-4 h-4 text-blue-600" />
-                                            <span className="font-medium text-slate-900">Light</span>
+                                            <Sun className={cn("w-4 h-4", appearance === 'light' ? "text-blue-600" : "text-slate-400")} />
+                                            <span className={cn("font-medium", appearance === 'light' ? "text-slate-900 dark:text-white" : "text-slate-500")}>Light</span>
                                         </div>
-                                        <div className="h-2 w-16 bg-blue-200 rounded-full"></div>
+                                        <div className="h-2 w-16 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
                                     </div>
-                                    <div className="border border-slate-200 rounded-lg p-4 w-32 cursor-pointer hover:border-blue-300">
+                                    <div
+                                        onClick={() => setAppearance('dark')}
+                                        className={cn(
+                                            "border-2 rounded-lg p-4 w-32 cursor-pointer transition-all",
+                                            appearance === 'dark' ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20" : "border-slate-200 dark:border-slate-700 hover:border-blue-300"
+                                        )}
+                                        data-action={ACTIONS.MPCS_SETTINGS_APPEARANCE_CHANGE}
+                                    >
                                         <div className="flex items-center gap-2 mb-2">
-                                            <Moon className="w-4 h-4 text-slate-400" />
-                                            <span className="font-medium text-slate-500">Dark</span>
+                                            <Moon className={cn("w-4 h-4", appearance === 'dark' ? "text-blue-600" : "text-slate-400")} />
+                                            <span className={cn("font-medium", appearance === 'dark' ? "text-slate-900 dark:text-white" : "text-slate-500")}>Dark</span>
                                         </div>
-                                        <div className="h-2 w-16 bg-slate-200 rounded-full"></div>
+                                        <div className="h-2 w-16 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                                    </div>
+                                    <div
+                                        onClick={() => setAppearance('system')}
+                                        className={cn(
+                                            "border-2 rounded-lg p-4 w-32 cursor-pointer transition-all",
+                                            appearance === 'system' ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20" : "border-slate-200 dark:border-slate-700 hover:border-blue-300"
+                                        )}
+                                        data-action={ACTIONS.MPCS_SETTINGS_APPEARANCE_CHANGE}
+                                    >
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <SettingsIcon className={cn("w-4 h-4", appearance === 'system' ? "text-blue-600" : "text-slate-400")} />
+                                            <span className={cn("font-medium", appearance === 'system' ? "text-slate-900 dark:text-white" : "text-slate-500")}>System</span>
+                                        </div>
+                                        <div className="h-2 w-16 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
                                     </div>
                                 </div>
                             </div>
@@ -247,8 +287,8 @@ export function Settings() {
                                 <Maximize2 className="w-6 h-6" />
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-lg font-semibold text-slate-900 mb-1">Default Aspect Ratio</h3>
-                                <p className="text-sm text-slate-500 mb-4">Set the default aspect ratio for new projects.</p>
+                                <h3 className="text-lg font-semibold text-slate-900 mb-1">Default Preview Aspect Ratio (App)</h3>
+                                <p className="text-sm text-slate-500 mb-4">Set the fallback aspect ratio for all projects and templates.</p>
 
                                 <div className="space-y-4">
                                     <div>
