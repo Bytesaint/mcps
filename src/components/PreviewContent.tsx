@@ -55,19 +55,23 @@ export default function PreviewContent({
                 isLoser ? "opacity-40 scale-90 grayscale" : "opacity-100 scale-100"
             )}>
                 <div className={cn(
-                    "w-48 h-80 rounded-[2rem] border-[6px] shadow-2xl relative overflow-hidden flex items-center justify-center transition-all duration-500",
+                    "w-48 h-80 rounded-[2rem] border-[6px] shadow-2xl relative overflow-hidden transition-all duration-500",
                     isWinner ? "border-green-500 ring-4 ring-green-500/30" : "border-slate-700",
                     "bg-gradient-to-b from-slate-800 to-black"
                 )}>
-                    {phone.image ? (
-                        <img
-                            src={phone.image.dataUrl}
-                            alt={phone.name}
-                            className="w-full h-full object-contain"
-                        />
-                    ) : (
-                        <div className="bg-slate-900 w-full h-full flex items-center justify-center text-slate-700 font-bold text-xs uppercase tracking-widest">NO IMAGE</div>
-                    )}
+                    {/* Screen area inside the phone frame */}
+                    <div className="w-full h-full overflow-hidden flex items-center justify-center bg-white/5">
+                        {phone.image ? (
+                            <img
+                                src={phone.image.dataUrl}
+                                alt={`${phone.name} image`}
+                                className="max-w-full max-h-full object-contain object-center select-none pointer-events-none"
+                                draggable={false}
+                            />
+                        ) : (
+                            <div className="text-xs text-slate-400">NO IMAGE</div>
+                        )}
+                    </div>
                     <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 h-4 bg-slate-700 rounded-full" />
 
                     {isWinner && (
