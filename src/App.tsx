@@ -32,8 +32,8 @@ function App() {
                                         <span className="text-3xl font-bold">P2</span>
                                     </div>
                                     <h2 className="text-2xl font-bold text-slate-800 mb-2">Visual Builder Coming Soon</h2>
-                                    <p className="text-slate-500 max-w-md">Phase 2 will include a drag-and-drop template editor with live preview.</p>
-                                    <p className="mt-8 text-xs text-slate-400">MPCS Phase 1 • UI Prototype</p>
+                                    <p className="text-slate-500 max-w-md">Phase 3 will include a drag-and-drop template editor with live preview.</p>
+                                    <p className="mt-8 text-xs text-slate-400">MPCS Phase 2B • Preview Edition</p>
                                 </div>
                             } />
                             <Route path="/generate" element={<Generate />} />

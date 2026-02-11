@@ -1,11 +1,15 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Smartphone, LayoutTemplate, Maximize2, Edit2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Smartphone, LayoutTemplate, Maximize2, Edit2, Music2 } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { useAppStore } from '../store/appStore';
 import { ACTIONS } from '../actionMap';
 import { formatAspectRatio, getDefaultAspectRatio } from '../types/aspectRatio';
 import PreviewStage from '../components/PreviewStage';
+import PreviewContent from '../components/PreviewContent';
+import { useState, useEffect } from 'react';
+import { playSfx, playMusic, stopMusic } from '../audio/player';
+import { cn } from '../lib/utils';
 
 export function ProjectDetail() {
     const { id } = useParams<{ id: string }>();
@@ -16,6 +20,38 @@ export function ProjectDetail() {
     const template = project ? state.templates.find(t => t.id === project.templateId) : null;
     const phoneA = project ? state.phones.find(p => p.id === project.phoneAId) : null;
     const phoneB = project ? state.phones.find(p => p.id === project.phoneBId) : null;
+
+    // Interactive Preview State
+    const [activeSceneKey, setActiveSceneKey] = useState<string>('intro');
+    const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+
+    // Initial scene
+    useEffect(() => {
+        if (template && !template.sections[activeSceneKey as keyof typeof template.sections]) {
+            setActiveSceneKey(Object.keys(template.sections)[0]);
+        }
+    }, [template]);
+
+    // Audio triggers
+    useEffect(() => {
+        if (!activeSceneKey || activeSceneKey === 'intro' || activeSceneKey === 'subintro') return;
+        const timer = setTimeout(() => playSfx('good'), 100);
+        return () => clearTimeout(timer);
+    }, [activeSceneKey]);
+
+    const handleMusicToggle = () => {
+        if (isMusicPlaying) {
+            stopMusic();
+            setIsMusicPlaying(false);
+        } else {
+            playMusic();
+            setIsMusicPlaying(true);
+        }
+    };
+
+    useEffect(() => {
+        return () => stopMusic();
+    }, []);
 
     if (!project) {
         return (
@@ -125,22 +161,68 @@ export function ProjectDetail() {
                         {/* Preview */}
                         <div>
                             <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider mb-4">
-                                Preview
+                                Interactive Preview
                             </h3>
-                            <PreviewStage aspectRatio={aspectRatio}>
-                                <div className="text-center text-white">
-                                    <h1 className="text-4xl font-bold mb-4">
-                                        {phoneA?.name || 'Phone A'}
-                                    </h1>
-                                    <p className="text-2xl text-slate-400 mb-8">VS</p>
-                                    <h1 className="text-4xl font-bold">
-                                        {phoneB?.name || 'Phone B'}
-                                    </h1>
-                                    <p className="mt-8 text-sm text-slate-400">
-                                        Full comparison video generation coming in Phase 3
-                                    </p>
+                            <div className="flex flex-col lg:flex-row gap-6">
+                                {/* Slides List */}
+                                <div className="w-56 flex-shrink-0 bg-slate-50 rounded-lg border border-slate-200 overflow-y-auto max-h-[400px]">
+                                    <div className="p-3 border-b border-slate-200 font-medium text-xs text-slate-500 sticky top-0 bg-slate-50 uppercase tracking-widest">
+                                        Sequence
+                                    </div>
+                                    <div className="p-2 space-y-1.5">
+                                        {template && Object.entries(template.sections).map(([key], idx) => (
+                                            <div
+                                                key={key}
+                                                onClick={() => setActiveSceneKey(key)}
+                                                className={cn(
+                                                    "p-2 rounded border text-xs flex items-center gap-2 cursor-pointer transition-all",
+                                                    activeSceneKey === key
+                                                        ? "border-blue-500 bg-blue-50 text-blue-700 font-bold"
+                                                        : "border-slate-200 bg-white text-slate-500 hover:border-blue-300"
+                                                )}
+                                            >
+                                                <span className={cn(
+                                                    "w-4 h-4 rounded-full flex items-center justify-center text-[10px]",
+                                                    activeSceneKey === key ? "bg-blue-500 text-white" : "bg-slate-200 text-slate-500"
+                                                )}>{idx + 1}</span>
+                                                <span className="capitalize">{key}</span>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </PreviewStage>
+
+                                <div className="flex-1 relative">
+                                    <PreviewStage
+                                        aspectRatio={aspectRatio}
+                                        animation={project.previewSettings?.animation}
+                                        activeSceneId={activeSceneKey}
+                                    >
+                                        <PreviewContent
+                                            sceneKey={activeSceneKey}
+                                            template={template || undefined}
+                                            phoneA={phoneA || undefined}
+                                            phoneB={phoneB || undefined}
+                                            rules={state.rules}
+                                        />
+
+                                        {/* Music Widget */}
+                                        <div className="absolute bottom-4 right-4 z-30">
+                                            <button
+                                                onClick={handleMusicToggle}
+                                                className={cn(
+                                                    "p-3 rounded-xl border transition-all flex items-center gap-2 backdrop-blur-md text-[10px] font-black uppercase tracking-widest",
+                                                    isMusicPlaying
+                                                        ? "bg-blue-500/20 border-blue-500 text-blue-400"
+                                                        : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-white/20"
+                                                )}
+                                            >
+                                                <Music2 className="w-4 h-4" />
+                                                {isMusicPlaying ? "Music ON" : "Music OFF"}
+                                            </button>
+                                        </div>
+                                    </PreviewStage>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </Card>

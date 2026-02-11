@@ -4,6 +4,8 @@ import { getRatioValue } from "../types/aspectRatio";
 import { ZoomIn, ZoomOut, Maximize, Minimize, X } from "lucide-react";
 import { ACTIONS } from "../actionMap";
 import { cn } from "../lib/utils";
+import type { AnimationSettings } from "../preview/animations";
+import DEFAULT_ANIMATION_SETTINGS from "../preview/animations";
 
 interface PreviewStageProps {
     aspectRatio: AspectRatio;
@@ -11,6 +13,8 @@ interface PreviewStageProps {
     children?: React.ReactNode;
     showGrid?: boolean;
     showSafeArea?: boolean;
+    animation?: AnimationSettings;
+    activeSceneId?: string;
 }
 
 export default function PreviewStage({
@@ -19,6 +23,8 @@ export default function PreviewStage({
     children,
     showGrid = false,
     showSafeArea = false,
+    animation = DEFAULT_ANIMATION_SETTINGS,
+    activeSceneId,
 }: PreviewStageProps) {
     const ratio = getRatioValue(aspectRatio);
     const [zoom, setZoom] = useState(1);
@@ -133,7 +139,17 @@ export default function PreviewStage({
                     )}
 
                     {/* Content */}
-                    <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+                    <div
+                        key={activeSceneId}
+                        className={cn(
+                            "relative w-full h-full flex items-center justify-center overflow-hidden",
+                            animation.type === 'fade' && "anim-fade",
+                            animation.type === 'slide' && "anim-slide"
+                        )}
+                        style={{
+                            "--anim-duration": `${animation.durationMs}ms`
+                        } as React.CSSProperties}
+                    >
                         {children || (
                             <div className="text-slate-700 text-center p-4">
                                 <div className="text-6xl mb-4 grayscale opacity-20">📱</div>

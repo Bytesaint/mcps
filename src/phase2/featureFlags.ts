@@ -1,6 +1,6 @@
 export const PHASE2_FLAGS = {
-    animations: false,     // Phase 2B
-    audioScoring: false,   // Phase 2B
-    jsonExportImport: false, // Phase 2B
-    music: false           // Phase 2B (preview only)
+    animations: true,     // Phase 2B
+    audioScoring: true,   // Phase 2B
+    jsonExportImport: true, // Phase 2B
+    music: true           // Phase 2B (preview only)
 };

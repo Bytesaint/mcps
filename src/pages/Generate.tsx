@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Smartphone, LayoutTemplate, ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Smartphone, LayoutTemplate, ArrowRight, ArrowLeft, CheckCircle, Music2, Sparkles, Layers, Clock } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Stepper } from '../components/Stepper';
@@ -12,7 +12,9 @@ import { cn } from '../lib/utils';
 import type { AspectRatio, AspectRatioPreset } from '../types/aspectRatio';
 import { getDefaultAspectRatioSetting } from '../store/settingsStore';
 import PreviewStage from '../components/PreviewStage';
-import { Music, Play, Volume2, FileJson } from 'lucide-react';
+import PreviewContent from '../components/PreviewContent';
+import DEFAULT_ANIMATION_SETTINGS, { AnimationSettings } from '../preview/animations';
+import { playSfx, playMusic, stopMusic } from '../audio/player';
 
 const STEPS = ['Select Template', 'Select Phones', 'Preview & Save'];
 
@@ -28,9 +30,12 @@ export function Generate() {
     const [phoneBId, setPhoneBId] = useState<string>('');
     const [projectName, setProjectName] = useState('');
 
-    // Aspect Ratio State
     const [aspectRatio, setAspectRatio] = useState<AspectRatio>(() => getDefaultAspectRatioSetting());
     const [useProjectOverride, setUseProjectOverride] = useState(false);
+
+    // Phase 2B Preview State
+    const [animationSettings, setAnimationSettings] = useState<AnimationSettings>(DEFAULT_ANIMATION_SETTINGS);
+    const [activeSceneKey, setActiveSceneKey] = useState<string>('intro');
 
     useEffect(() => {
         if (!useProjectOverride) {
@@ -65,13 +70,48 @@ export function Generate() {
             phoneBId,
             createdAt: now,
             updatedAt: now,
-            aspectRatioOverride: useProjectOverride ? aspectRatio : undefined
+            aspectRatioOverride: useProjectOverride ? aspectRatio : undefined,
+            previewSettings: {
+                animation: animationSettings,
+                audioEnabled: true,
+                audioVolume: 0.8,
+            }
         };
 
         addProject(project);
         toast("Project generated successfully", "success");
         navigate('/projects');
     };
+
+    const template = state.templates.find(t => t.id === selectedTemplateId);
+
+    // Audio Effect Logic
+    useEffect(() => {
+        if (!activeSceneKey || activeSceneKey === 'intro' || activeSceneKey === 'subintro') return;
+
+        // Brief delay for audio playback to match transition
+        const timer = setTimeout(() => {
+            playSfx('good');
+        }, 100);
+
+        return () => clearTimeout(timer);
+    }, [activeSceneKey]);
+
+    const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+    const handleMusicToggle = () => {
+        if (isMusicPlaying) {
+            stopMusic();
+            setIsMusicPlaying(false);
+        } else {
+            playMusic();
+            setIsMusicPlaying(true);
+        }
+    };
+
+    // Stop music on unmount
+    useEffect(() => {
+        return () => stopMusic();
+    }, []);
 
     const renderStep1 = () => (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -100,7 +140,6 @@ export function Generate() {
     const renderStep2 = () => (
         <div className="max-w-2xl mx-auto space-y-8">
             <div className="grid grid-cols-2 gap-8 items-center">
-                {/* Phone A */}
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-slate-700">Phone A (Left)</label>
                     <select
@@ -129,12 +168,10 @@ export function Generate() {
                     )}
                 </div>
 
-                {/* VS Badge */}
                 <div className="flex flex-col items-center justify-center pt-6">
                     <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold shadow-lg">VS</div>
                 </div>
 
-                {/* Phone B */}
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-slate-700">Phone B (Right)</label>
                     <select
@@ -178,11 +215,8 @@ export function Generate() {
     );
 
     const renderStep3 = () => {
-        const template = state.templates.find((t) => t.id === selectedTemplateId);
-
         return (
             <div className="space-y-6">
-                {/* Aspect Ratio Controls */}
                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
                     <div className="flex items-center gap-4 mb-3">
                         <label className="flex items-center gap-2 cursor-pointer">
@@ -217,129 +251,124 @@ export function Generate() {
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Slides List */}
                     <div className="w-64 flex-shrink-0 bg-slate-50 rounded-lg border border-slate-200 overflow-y-auto max-h-[500px]">
                         <div className="p-3 border-b border-slate-200 font-medium text-sm text-slate-500 sticky top-0 bg-slate-50">
                             Slides Sequence
                         </div>
                         <div className="p-2 space-y-2">
                             {template && Object.entries(template.sections).map(([key], idx) => (
-                                <div key={key} className="p-2 bg-white rounded border border-slate-200 text-sm flex items-center gap-2 cursor-pointer hover:border-blue-300">
-                                    <span className="w-5 h-5 rounded bg-slate-100 flex items-center justify-center text-xs text-slate-500">{idx + 1}</span>
-                                    {key}
+                                <div
+                                    key={key}
+                                    onClick={() => setActiveSceneKey(key)}
+                                    className={cn(
+                                        "p-2 rounded border text-sm flex items-center gap-2 cursor-pointer transition-all",
+                                        activeSceneKey === key
+                                            ? "border-blue-500 bg-blue-50 text-blue-700 font-medium"
+                                            : "border-slate-200 bg-white text-slate-600 hover:border-blue-300"
+                                    )}
+                                >
+                                    <span className={cn(
+                                        "w-5 h-5 rounded flex items-center justify-center text-xs",
+                                        activeSceneKey === key ? "bg-blue-500 text-white" : "bg-slate-100 text-slate-500"
+                                    )}>{idx + 1}</span>
+                                    <span className="capitalize">{key}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* Preview Stage */}
                     <div className="flex-1 space-y-6">
-                        <PreviewStage aspectRatio={aspectRatio} showGrid={false}>
+                        <PreviewStage
+                            aspectRatio={aspectRatio}
+                            showGrid={false}
+                            animation={animationSettings}
+                            activeSceneId={activeSceneKey}
+                        >
                             <div className="flex w-full h-full items-center justify-around px-8">
-                                {/* Phone A Preview Card */}
-                                <div className="flex flex-col items-center gap-6 animate-in slide-in-from-left-8 duration-700">
-                                    <div className="w-48 h-80 bg-gradient-to-b from-slate-800 to-black rounded-[2rem] border-[6px] border-slate-700 shadow-2xl relative overflow-hidden flex items-center justify-center">
-                                        {state.phones.find(p => p.id === phoneAId)?.image ? (
-                                            <img
-                                                src={state.phones.find(p => p.id === phoneAId)?.image?.dataUrl || ''}
-                                                alt="Phone A"
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <div className="bg-slate-900 w-full h-full flex items-center justify-center text-slate-700 font-bold text-xs uppercase tracking-widest">NO IMAGE</div>
-                                        )}
-                                        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 h-4 bg-slate-700 rounded-full" />
-                                    </div>
-                                    <h1 className="text-3xl font-black text-white drop-shadow-lg text-center">
-                                        {state.phones.find((p) => p.id === phoneAId)?.name}
-                                    </h1>
-                                </div>
+                                <PreviewContent
+                                    sceneKey={activeSceneKey}
+                                    template={template}
+                                    phoneA={state.phones.find(p => p.id === phoneAId)}
+                                    phoneB={state.phones.find(p => p.id === phoneBId)}
+                                    rules={state.rules}
+                                />
+                            </div>
 
-                                <div className="text-4xl font-black text-blue-500 italic drop-shadow-xl z-20">VS</div>
-
-                                {/* Phone B Preview Card */}
-                                <div className="flex flex-col items-center gap-6 animate-in slide-in-from-right-8 duration-700">
-                                    <div className="w-48 h-80 bg-gradient-to-b from-slate-800 to-black rounded-[2rem] border-[6px] border-slate-700 shadow-2xl relative overflow-hidden flex items-center justify-center">
-                                        {state.phones.find(p => p.id === phoneBId)?.image ? (
-                                            <img
-                                                src={state.phones.find(p => p.id === phoneBId)?.image?.dataUrl || ''}
-                                                alt="Phone B"
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <div className="bg-slate-900 w-full h-full flex items-center justify-center text-slate-700 font-bold text-xs uppercase tracking-widest">NO IMAGE</div>
-                                        )}
-                                        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 h-4 bg-slate-700 rounded-full" />
-                                    </div>
-                                    <h1 className="text-3xl font-black text-white drop-shadow-lg text-center">
-                                        {state.phones.find((p) => p.id === phoneBId)?.name}
-                                    </h1>
-                                </div>
+                            <div className="absolute bottom-6 right-6 z-30">
+                                <button
+                                    onClick={handleMusicToggle}
+                                    className={cn(
+                                        "p-4 rounded-2xl border-2 transition-all flex items-center gap-3 backdrop-blur-md",
+                                        isMusicPlaying
+                                            ? "bg-blue-500/20 border-blue-500 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.5)]"
+                                            : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-white/20"
+                                    )}
+                                    data-action={ACTIONS.MPCS_MUSIC_PLAY_PAUSE}
+                                >
+                                    {isMusicPlaying ? (
+                                        <div className="flex items-end gap-0.5 h-4 mb-0.5">
+                                            {[1, 2, 3, 4].map(i => (
+                                                <div key={i} className="w-1 bg-blue-400 animate-pulse" style={{ height: `${Math.random() * 100}%`, animationDuration: `${0.5 + Math.random()}s` }} />
+                                            ))}
+                                        </div>
+                                    ) : <Music2 className="w-5 h-5" />}
+                                    <span className="text-xs font-black uppercase tracking-widest">{isMusicPlaying ? "Music ON" : "Music OFF"}</span>
+                                </button>
                             </div>
                         </PreviewStage>
 
-                        {/* Phase 2B Placeholders Section */}
-                        <div className="bg-slate-900 rounded-xl p-6 border border-slate-800 shadow-xl overflow-hidden relative">
-                            <div className="absolute top-0 right-0 p-2">
-                                <span className="text-[10px] font-bold text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded uppercase tracking-widest">Phase 2B Preview</span>
+                        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                            <div className="flex items-center gap-2 font-semibold text-slate-800 border-b pb-2 mb-2">
+                                <Sparkles className="w-4 h-4 text-blue-500" />
+                                Preview Animations
                             </div>
-                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6">Advanced Generation Settings</h4>
-
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                                {/* Animations */}
-                                <div className="group opacity-50 cursor-not-allowed" title="Available after Phase 2 balance">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <Play className="w-4 h-4 text-slate-500" />
-                                        <span className="text-sm font-semibold text-slate-300">Animations</span>
-                                    </div>
-                                    <div className="w-full h-10 bg-slate-800 rounded-lg border border-slate-700 flex items-center px-3 justify-between">
-                                        <span className="text-xs text-slate-500">None</span>
-                                        <div className="w-8 h-4 bg-slate-700 rounded-full relative">
-                                            <div className="absolute top-0.5 left-0.5 w-3 h-3 bg-slate-600 rounded-full" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Audio Scoring */}
-                                <div className="group opacity-50 cursor-not-allowed" title="Available after Phase 2 balance">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <Volume2 className="w-4 h-4 text-slate-500" />
-                                        <span className="text-sm font-semibold text-slate-300">Audio Scoring</span>
-                                    </div>
-                                    <div className="w-full h-10 bg-slate-800 rounded-lg border border-slate-700 flex items-center px-3 justify-between">
-                                        <span className="text-xs text-slate-500">Disabled</span>
-                                        <div className="w-8 h-4 bg-slate-700 rounded-full relative">
-                                            <div className="absolute top-0.5 left-0.5 w-3 h-3 bg-slate-600 rounded-full" />
-                                        </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                        <Layers className="w-3 h-3" />
+                                        Transition Style
+                                    </label>
+                                    <div className="flex gap-2">
+                                        {(['none', 'fade', 'slide'] as const).map((type) => (
+                                            <button
+                                                key={type}
+                                                onClick={() => setAnimationSettings(prev => ({ ...prev, type }))}
+                                                data-action={ACTIONS.MPCS_ANIM_TYPE_CHANGE}
+                                                className={cn(
+                                                    "flex-1 py-2 px-3 rounded-lg text-sm font-medium border transition-all capitalize",
+                                                    animationSettings.type === type
+                                                        ? "bg-blue-500 text-white border-blue-600 shadow-inner"
+                                                        : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+                                                )}
+                                            >
+                                                {type}
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
 
-                                {/* Background Music */}
-                                <div className="group opacity-50 cursor-not-allowed" title="Available after Phase 2 balance">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <Music className="w-4 h-4 text-slate-500" />
-                                        <span className="text-sm font-semibold text-slate-300">Music</span>
-                                    </div>
-                                    <div className="w-full h-10 bg-slate-800 rounded-lg border border-slate-700 flex items-center px-3 justify-between">
-                                        <span className="text-xs text-slate-500 text-truncate">Default Beat</span>
-                                    </div>
-                                </div>
-
-                                {/* JSON Export */}
-                                <div className="group opacity-50 cursor-not-allowed" title="Available after Phase 2 balance">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <FileJson className="w-4 h-4 text-slate-500" />
-                                        <span className="text-sm font-semibold text-slate-300">JSON Project</span>
-                                    </div>
-                                    <div className="w-full h-10 bg-slate-800 rounded-lg border border-slate-700 flex items-center px-3 justify-center gap-2">
-                                        <span className="text-xs text-slate-500">Import/Export</span>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                        <Clock className="w-3 h-3" />
+                                        Duration ({animationSettings.durationMs}ms)
+                                    </label>
+                                    <input
+                                        type="range"
+                                        min="150"
+                                        max="1000"
+                                        step="50"
+                                        value={animationSettings.durationMs}
+                                        onChange={(e) => setAnimationSettings(prev => ({ ...prev, durationMs: parseInt(e.target.value) }))}
+                                        data-action={ACTIONS.MPCS_ANIM_DURATION_CHANGE}
+                                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                    />
+                                    <div className="flex justify-between text-[10px] text-slate-400 font-medium px-1">
+                                        <span>Fast (150ms)</span>
+                                        <span>Normal</span>
+                                        <span>Slow (1000ms)</span>
                                     </div>
                                 </div>
                             </div>
-
-                            <p className="text-[10px] text-slate-600 mt-6 italic text-center border-t border-slate-800 pt-4">
-                                These features are locked. Please complete Phase 2 balance to enable advanced kinetic rendering and audio integration.
-                            </p>
                         </div>
                     </div>
                 </div>

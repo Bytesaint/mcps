@@ -1,4 +1,5 @@
 import type { AspectRatio } from './aspectRatio';
+import type { AnimationSettings } from '../preview/animations';
 
 export interface PhoneSpec {
     id: string;
@@ -47,6 +48,15 @@ export interface Template {
     updatedAt: string; // ISO string
 }
 
+export interface PreviewSettings {
+    animation: AnimationSettings;
+    audioEnabled: boolean;
+    audioVolume: number;
+    musicEnabled?: boolean;
+    musicVolume?: number;
+    musicLoop?: boolean;
+}
+
 export interface Project {
     id: string;
     name: string;
@@ -54,6 +64,7 @@ export interface Project {
     phoneAId: string;
     phoneBId: string;
     aspectRatioOverride?: AspectRatio;
+    previewSettings?: PreviewSettings;
     createdAt: string; // ISO string
     updatedAt: string; // ISO string
 }
