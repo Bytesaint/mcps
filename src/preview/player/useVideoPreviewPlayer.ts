@@ -1,16 +1,13 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { DEFAULT_SCENE_DURATIONS_MS } from './durations';
+// DEFAULT_SCENE_DURATIONS_MS removed as it is now used inside getEffectiveScene
 
-interface Scene {
-    type: string;
-    [key: string]: any;
-}
+import { Scene } from '../../types/models';
+import { getEffectiveScene, isSceneDisabled } from '../sceneMerge';
 
 interface UseVideoPreviewPlayerProps {
     scenes: Scene[];
     currentIndex: number;
     setCurrentIndex: (index: number) => void;
-    durationsMs?: typeof DEFAULT_SCENE_DURATIONS_MS;
     speed?: number;
 }
 
@@ -18,7 +15,6 @@ export function useVideoPreviewPlayer({
     scenes,
     currentIndex,
     setCurrentIndex,
-    durationsMs = DEFAULT_SCENE_DURATIONS_MS,
     speed: initialSpeed = 1
 }: UseVideoPreviewPlayerProps) {
     const [isPlaying, setIsPlaying] = useState(false);
@@ -28,13 +24,19 @@ export function useVideoPreviewPlayer({
     const requestRef = useRef<number>();
     const previousTimeRef = useRef<number>();
 
-    // Calculate scene durations based on type
+    // Calculate scene durations based on type and overrides
     const getSceneDuration = useCallback((sceneIndex: number) => {
         const scene = scenes[sceneIndex];
         if (!scene) return 0;
-        const type = scene.type as keyof typeof DEFAULT_SCENE_DURATIONS_MS;
-        return (durationsMs[type] || 2000) / speed;
-    }, [scenes, durationsMs, speed]);
+
+        // Skip disabled scenes (duration 0) unless it's the current one selected manually
+        // But for playback calculation, we want to know the *play* duration.
+        // If we are just calculating total time, disabled scenes should be 0.
+        if (isSceneDisabled(scene)) return 0;
+
+        const effective = getEffectiveScene(scene).effective;
+        return effective.durationMs / speed;
+    }, [scenes, speed]);
 
     const currentSceneDurationMs = getSceneDuration(currentIndex);
 
@@ -57,20 +59,34 @@ export function useVideoPreviewPlayer({
     const togglePlay = useCallback(() => setIsPlaying(prev => !prev), []);
 
     const next = useCallback(() => {
-        if (currentIndex < scenes.length - 1) {
-            setCurrentIndex(currentIndex + 1);
+        let nextIndex = currentIndex + 1;
+
+        // Find next enabled scene
+        while (nextIndex < scenes.length && isSceneDisabled(scenes[nextIndex])) {
+            nextIndex++;
+        }
+
+        if (nextIndex < scenes.length) {
+            setCurrentIndex(nextIndex);
             setSceneElapsedMs(0);
         } else {
             setIsPlaying(false);
         }
-    }, [currentIndex, scenes.length, setCurrentIndex]);
+    }, [currentIndex, scenes, setCurrentIndex]);
 
     const prev = useCallback(() => {
-        if (currentIndex > 0) {
-            setCurrentIndex(currentIndex - 1);
+        let prevIndex = currentIndex - 1;
+
+        // Find prev enabled scene
+        while (prevIndex >= 0 && isSceneDisabled(scenes[prevIndex])) {
+            prevIndex--;
+        }
+
+        if (prevIndex >= 0) {
+            setCurrentIndex(prevIndex);
             setSceneElapsedMs(0);
         }
-    }, [currentIndex, setCurrentIndex]);
+    }, [currentIndex, scenes, setCurrentIndex]);
 
     const seek = useCallback((percent: number) => {
         const targetMs = (percent / 100) * totalDurationMs;
@@ -127,16 +143,16 @@ export function useVideoPreviewPlayer({
 
     // Handle scene transition logic outside of RAF tick to avoid state sync issues
     useEffect(() => {
-        if (isPlaying && sceneElapsedMs >= currentSceneDurationMs) {
-            if (currentIndex < scenes.length - 1) {
-                setCurrentIndex(currentIndex + 1);
-                setSceneElapsedMs(0);
-            } else {
-                setIsPlaying(false);
-                setSceneElapsedMs(currentSceneDurationMs);
-            }
+        // If current scene became disabled (e.g. while playing), skip it
+        if (isPlaying && scenes[currentIndex] && isSceneDisabled(scenes[currentIndex])) {
+            next();
+            return;
         }
-    }, [sceneElapsedMs, currentSceneDurationMs, currentIndex, scenes.length, isPlaying, setCurrentIndex]);
+
+        if (isPlaying && sceneElapsedMs >= currentSceneDurationMs) {
+            next();
+        }
+    }, [sceneElapsedMs, currentSceneDurationMs, currentIndex, scenes, isPlaying, next]);
 
     // Reset elapsed on manual index change
     const lastIndexRef = useRef(currentIndex);

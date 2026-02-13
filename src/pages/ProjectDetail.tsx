@@ -12,6 +12,8 @@ import { playSfx, playMusic, stopMusic } from '../audio/player';
 import { cn } from '../lib/utils';
 import { useVideoPreviewPlayer } from '../preview/player/useVideoPreviewPlayer';
 import { PlayerBar } from '../preview/player/PlayerBar';
+import { generateScenes } from '../engine/projectLogic';
+import { Scene } from '../types/models';
 
 export function ProjectDetail() {
     const { id } = useParams<{ id: string }>();
@@ -27,8 +29,11 @@ export function ProjectDetail() {
     const [activeSceneKey, setActiveSceneKey] = useState<string>('intro');
     const [isMusicPlaying, setIsMusicPlaying] = useState(false);
 
-    const scenes = template ? Object.keys(template.sections).map(key => ({ type: key })) : [];
-    const activeSceneIndex = scenes.findIndex(s => s.type === activeSceneKey);
+    // Use stored scenes or generate on fly (backward compatibility)
+    const scenes: Scene[] = project?.scenes || (template && phoneA && phoneB ? generateScenes(template, phoneA, phoneB, state.rules) : []);
+
+    const activeSceneIndex = scenes.findIndex(s => s.id === activeSceneKey);
+    const activeScene = scenes[activeSceneIndex];
 
     const {
         isPlaying,
@@ -45,7 +50,7 @@ export function ProjectDetail() {
         scenes: scenes,
         currentIndex: activeSceneIndex >= 0 ? activeSceneIndex : 0,
         setCurrentIndex: (idx) => {
-            if (scenes[idx]) setActiveSceneKey(scenes[idx].type);
+            if (scenes[idx]) setActiveSceneKey(scenes[idx].id);
         }
     });
 
@@ -224,6 +229,7 @@ export function ProjectDetail() {
                                         >
                                             <PreviewContent
                                                 sceneKey={activeSceneKey}
+                                                scene={activeScene}
                                                 template={template || undefined}
                                                 phoneA={phoneA || undefined}
                                                 phoneB={phoneB || undefined}

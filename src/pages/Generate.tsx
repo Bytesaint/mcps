@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Smartphone, LayoutTemplate, ArrowRight, ArrowLeft, CheckCircle, Music2, Sparkles, Info, RotateCcw } from 'lucide-react';
+import { Smartphone, LayoutTemplate, ArrowRight, ArrowLeft, CheckCircle, Music2, Sparkles } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Stepper } from '../components/Stepper';
 import { useAppStore } from '../store/appStore';
-import type { Project } from '../types/models';
+import type { Project, SceneOverride } from '../types/models';
 import { useToast } from '../components/Toast';
 import { ACTIONS } from '../actionMap';
 import { cn } from '../lib/utils';
@@ -17,6 +17,8 @@ import DEFAULT_ANIMATION_SETTINGS, { AnimationSettings } from '../preview/animat
 import { playSfx, playMusic, stopMusic } from '../audio/player';
 import { useVideoPreviewPlayer } from '../preview/player/useVideoPreviewPlayer';
 import { PlayerBar } from '../preview/player/PlayerBar';
+import { SceneInspector } from '../components/SceneInspector';
+import { generateScenes } from '../engine/projectLogic';
 
 const STEPS = ['Select Template', 'Select Phones', 'Preview & Save'];
 
@@ -37,12 +39,38 @@ export function Generate() {
 
     // Phase 2B Preview State
     const [animationSettings, setAnimationSettings] = useState<AnimationSettings>(DEFAULT_ANIMATION_SETTINGS);
-    const [activeSceneKey, setActiveSceneKey] = useState<string>('intro');
-    const [sceneOverrides, setSceneOverrides] = useState<Record<string, string>>({});
+    const [activeSceneId, setActiveSceneId] = useState<string>('intro');
+    // Initialize overrides from localStorage if available (simple draft persistence)
+    const [overrides, setOverrides] = useState<Record<string, SceneOverride>>(() => {
+        try {
+            const saved = localStorage.getItem('mpcs_generate_overrides_draft');
+            return saved ? JSON.parse(saved) : {};
+        } catch (e) {
+            return {};
+        }
+    });
+
+    // Persist overrides changes
+    useEffect(() => {
+        localStorage.setItem('mpcs_generate_overrides_draft', JSON.stringify(overrides));
+    }, [overrides]);
 
     const template = state.templates.find(t => t.id === selectedTemplateId);
-    const scenes = template ? Object.keys(template.sections).map(key => ({ type: key })) : [];
-    const activeSceneIndex = scenes.findIndex(s => s.type === activeSceneKey);
+
+    // Generate scenes with overrides
+    const scenes = useMemo(() => {
+        if (!template || !phoneAId || !phoneBId) return [];
+        const phoneA = state.phones.find(p => p.id === phoneAId);
+        const phoneB = state.phones.find(p => p.id === phoneBId);
+        const rules = state.rules;
+
+        if (!phoneA || !phoneB) return [];
+
+        return generateScenes(template, phoneA, phoneB, rules, overrides);
+    }, [template, phoneAId, phoneBId, state.phones, state.rules, overrides]);
+
+    const activeSceneIndex = scenes.findIndex(s => s.id === activeSceneId);
+    const activeScene = scenes[activeSceneIndex];
 
     const {
         isPlaying,
@@ -59,7 +87,7 @@ export function Generate() {
         scenes: scenes,
         currentIndex: activeSceneIndex >= 0 ? activeSceneIndex : 0,
         setCurrentIndex: (idx) => {
-            if (scenes[idx]) setActiveSceneKey(scenes[idx].type);
+            if (scenes[idx]) setActiveSceneId(scenes[idx].id);
         }
     });
 
@@ -92,11 +120,6 @@ export function Generate() {
         const phoneA = state.phones.find(p => p.id === phoneAId);
         const phoneB = state.phones.find(p => p.id === phoneBId);
 
-        const scenes = template ? Object.keys(template.sections).map(key => ({
-            type: key as any,
-            contextOverrides: sceneOverrides[key] ? { caption: sceneOverrides[key] } : undefined
-        })) : [];
-
         const project: Project = {
             id: Math.random().toString(36).substring(2, 11),
             name: projectName || `${phoneA?.name || 'Phone A'} vs ${phoneB?.name || 'Phone B'}`,
@@ -111,7 +134,7 @@ export function Generate() {
                 audioEnabled: true,
                 audioVolume: 0.8,
             },
-            scenes: scenes
+            scenes: scenes // Save the fully generated scenes with overrides
         };
 
         addProject(project);
@@ -121,7 +144,7 @@ export function Generate() {
 
     // Audio Effect Logic
     useEffect(() => {
-        if (!activeSceneKey || activeSceneKey === 'intro' || activeSceneKey === 'subintro') return;
+        if (!activeSceneId || activeSceneId === 'intro' || activeSceneId === 'subintro') return;
 
         // Brief delay for audio playback to match transition
         const timer = setTimeout(() => {
@@ -129,7 +152,7 @@ export function Generate() {
         }, 100);
 
         return () => clearTimeout(timer);
-    }, [activeSceneKey]);
+    }, [activeSceneId]);
 
     const [isMusicPlaying, setIsMusicPlaying] = useState(false);
     const handleMusicToggle = () => {
@@ -248,6 +271,13 @@ export function Generate() {
         </div>
     );
 
+    const effectiveAnimation: AnimationSettings = activeScene?.override?.transition
+        ? {
+            type: activeScene.override.transition.type,
+            durationMs: activeScene.override.transition.durationMs ?? 350
+        }
+        : animationSettings;
+
     const renderStep3 = () => {
         return (
             <div className="space-y-6">
@@ -290,16 +320,16 @@ export function Generate() {
                         <PreviewStage
                             aspectRatio={aspectRatio}
                             showGrid={false}
-                            animation={animationSettings}
-                            activeSceneId={activeSceneKey}
+                            animation={effectiveAnimation}
+                            activeSceneId={activeSceneId}
                         >
                             <PreviewContent
-                                sceneKey={activeSceneKey}
+                                sceneKey={activeSceneId}
+                                scene={activeScene}
                                 template={template}
                                 phoneA={state.phones.find(p => p.id === phoneAId)}
                                 phoneB={state.phones.find(p => p.id === phoneBId)}
                                 rules={state.rules}
-                                captionOverride={sceneOverrides[activeSceneKey]}
                             />
 
                             {/* Music Badge (Audio Toggle) */}
@@ -351,19 +381,27 @@ export function Generate() {
                             <span className="text-[10px] text-slate-400">Select any scene to preview/edit</span>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-                            {template && Object.entries(template.sections).map(([key], idx) => (
+                            {scenes.map((scene, idx) => (
                                 <div
-                                    key={key}
-                                    onClick={() => setActiveSceneKey(key)}
+                                    key={scene.id}
+                                    onClick={() => setActiveSceneId(scene.id)}
                                     className={cn(
-                                        "p-3 rounded-xl border-2 cursor-pointer transition-all hover:border-blue-300 text-center flex flex-col items-center justify-center min-h-[70px]",
-                                        activeSceneKey === key
+                                        "p-3 rounded-xl border-2 cursor-pointer transition-all hover:border-blue-300 text-center flex flex-col items-center justify-center min-h-[70px] relative",
+                                        activeSceneId === scene.id
                                             ? "border-blue-500 bg-blue-50 shadow-sm"
-                                            : "border-slate-200 bg-white hover:bg-slate-50"
+                                            : "border-slate-200 bg-white hover:bg-slate-50",
+                                        scene.override?.enabled === false && "opacity-50 grayscale"
                                     )}
                                 >
+                                    <div className="absolute top-1 right-1 w-2 h-2 rounded-full">
+                                        {scene.override?.enabled === false ? (
+                                            <div className="w-2 h-2 rounded-full bg-slate-400" />
+                                        ) : Object.keys(scene.override || {}).length > 0 ? (
+                                            <div className="w-2 h-2 rounded-full bg-amber-500" />
+                                        ) : null}
+                                    </div>
                                     <div className="text-[9px] font-bold text-slate-400 mb-0.5">S{idx + 1}</div>
-                                    <div className="capitalize font-black text-slate-800 text-[10px] truncate w-full">{key}</div>
+                                    <div className="capitalize font-black text-slate-800 text-[10px] truncate w-full">{scene.label}</div>
                                 </div>
                             ))}
                         </div>
@@ -417,36 +455,27 @@ export function Generate() {
                         </div>
 
                         {/* Scene Inspector - Now Integrated Vertically */}
-                        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col">
-                            <div className="flex items-center justify-between border-b pb-2 mb-3">
-                                <div className="flex items-center gap-2 font-bold text-slate-800 uppercase tracking-wider text-xs">
-                                    <Info className="w-3.5 h-3.5 text-purple-500" />
-                                    Inspector: <span className="text-purple-600 font-black">{activeSceneKey}</span>
-                                </div>
-                                <button
-                                    onClick={() => {
-                                        const newOverrides = { ...sceneOverrides };
-                                        delete newOverrides[activeSceneKey];
-                                        setSceneOverrides(newOverrides);
-                                    }}
-                                    disabled={!sceneOverrides[activeSceneKey]}
-                                    className="flex items-center gap-1.5 text-[9px] font-bold text-slate-400 hover:text-red-500 disabled:opacity-0 transition-all uppercase tracking-widest"
-                                    data-action={ACTIONS.MPCS_GENERATE_SCENE_RESET}
-                                >
-                                    <RotateCcw className="w-2.5 h-2.5" /> Reset
-                                </button>
+                        {/* Scene Inspector - Now Integrated Vertically */}
+                        {activeScene ? (
+                            <SceneInspector
+                                scene={activeScene}
+                                onUpdate={(sceneId, updates) => {
+                                    setOverrides(prev => ({
+                                        ...prev,
+                                        [sceneId]: { ...(prev[sceneId] || {}), ...updates }
+                                    }));
+                                }}
+                                onReset={(sceneId) => {
+                                    const newOverrides = { ...overrides };
+                                    delete newOverrides[sceneId];
+                                    setOverrides(newOverrides);
+                                }}
+                            />
+                        ) : (
+                            <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm flex items-center justify-center text-slate-400 text-sm italic">
+                                Select a scene to inspect
                             </div>
-                            <div className="flex-1 space-y-3">
-                                <textarea
-                                    value={sceneOverrides[activeSceneKey] || ""}
-                                    onChange={(e) => setSceneOverrides({ ...sceneOverrides, [activeSceneKey]: e.target.value })}
-                                    placeholder="Enter manual text to override auto-generated content..."
-                                    className="w-full h-full min-h-[80px] px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
-                                    data-action={ACTIONS.MPCS_GENERATE_SCENE_TEXT_EDIT}
-                                />
-                                <p className="text-[9px] text-slate-400 italic">Overrides auto-logic for the selected scene.</p>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </div>

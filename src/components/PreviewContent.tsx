@@ -1,11 +1,14 @@
-import { Phone, Rule, Template } from '../types/models';
+import { Phone, Rule, Template, Scene } from '../types/models';
 import { cn } from '../lib/utils';
 import { Trophy, AlertTriangle } from 'lucide-react';
 import { compareSpecs } from '../engine/compareAdvanced';
 import PhoneCutout from '../preview/components/PhoneCutout';
+import { getEffectiveScene } from '../preview/sceneMerge';
 
 interface PreviewContentProps {
     sceneKey: string;
+    // We now support passing the full Scene object
+    scene?: Scene;
     template?: Template;
     phoneA?: Phone;
     phoneB?: Phone;
@@ -15,6 +18,7 @@ interface PreviewContentProps {
 
 export default function PreviewContent({
     sceneKey,
+    scene,
     template,
     phoneA,
     phoneB,
@@ -31,6 +35,10 @@ export default function PreviewContent({
     let winner: 'A' | 'B' | 'TIE' | null = null;
     let reason = "";
 
+    // If we have a Scene object, use its effective values for overrides
+    const effectiveScene = scene ? getEffectiveScene(scene) : null;
+    const effectiveWinner = effectiveScene?.effective.winner;
+
     // Detect scene types
     const isIntro = sceneKey === 'intro';
     const isSubintro = sceneKey === 'subintro';
@@ -39,14 +47,21 @@ export default function PreviewContent({
     const isBodyScene = !isIntro && !isSubintro && !isScore;
 
     if (isBodyScene) {
-        const rule = rules.find(r => r.id === sceneKey || r.specKey === sceneKey);
-        const specA = phoneA.specs.find(s => s.key === rule?.specKey || s.key === sceneKey)?.value || "";
-        const specB = phoneB.specs.find(s => s.key === rule?.specKey || s.key === sceneKey)?.value || "";
+        // If override is set, use it
+        if (effectiveWinner !== undefined && effectiveWinner !== null) {
+            winner = effectiveWinner;
+            reason = "Manual Override";
+        } else {
+            // Otherwise calculate
+            const rule = rules.find(r => r.id === sceneKey || r.specKey === sceneKey);
+            const specA = phoneA.specs.find(s => s.key === rule?.specKey || s.key === sceneKey)?.value || "";
+            const specB = phoneB.specs.find(s => s.key === rule?.specKey || s.key === sceneKey)?.value || "";
 
-        if (rule) {
-            const result = compareSpecs(specA, specB, rule);
-            winner = result.winner;
-            reason = result.reason;
+            if (rule) {
+                const result = compareSpecs(specA, specB, rule);
+                winner = result.winner;
+                reason = result.reason;
+            }
         }
     }
 
@@ -83,7 +98,7 @@ export default function PreviewContent({
                 {/* Phone cutout with premium styling */}
                 <div className="relative w-full h-full flex items-center justify-center">
                     <PhoneCutout
-                        src={phone.image?.dataUrl ?? null}
+                        src={(side === 'A' ? effectiveScene?.effective.media?.phoneAImageSrc : effectiveScene?.effective.media?.phoneBImageSrc) ?? phone.image?.dataUrl ?? null}
                         alt={phone.name}
                         variant={currentVariant}
                     />
@@ -125,9 +140,9 @@ export default function PreviewContent({
             </div>
             {renderPhoneCard(phoneB, 'B')}
 
-            {(reason || captionOverride) && (
+            {(reason || captionOverride || effectiveScene?.effective.text?.caption) && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/10 text-white/60 text-[10px] font-medium max-w-[80%] text-center truncate">
-                    {captionOverride || reason}
+                    {effectiveScene?.effective.text?.caption || captionOverride || reason}
                 </div>
             )}
         </div>
