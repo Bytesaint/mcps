@@ -2,6 +2,7 @@ import { Phone, Rule, Template } from '../types/models';
 import { cn } from '../lib/utils';
 import { Trophy, AlertTriangle } from 'lucide-react';
 import { compareSpecs } from '../engine/compareAdvanced';
+import PhoneCutout from '../preview/components/PhoneCutout';
 
 interface PreviewContentProps {
     sceneKey: string;
@@ -30,7 +31,12 @@ export default function PreviewContent({
     let winner: 'A' | 'B' | 'TIE' | null = null;
     let reason = "";
 
-    const isBodyScene = sceneKey !== 'intro' && sceneKey !== 'subintro' && sceneKey !== 'score';
+    // Detect scene types
+    const isIntro = sceneKey === 'intro';
+    const isSubintro = sceneKey === 'subintro';
+    const isScore = sceneKey === 'score';
+    const isCameraScene = sceneKey.toLowerCase().includes('camera');
+    const isBodyScene = !isIntro && !isSubintro && !isScore;
 
     if (isBodyScene) {
         const rule = rules.find(r => r.id === sceneKey || r.specKey === sceneKey);
@@ -44,44 +50,55 @@ export default function PreviewContent({
         }
     }
 
+    // Determine phone size variant based on scene type
+    let phoneVariant: "large" | "medium" | "small" = "large";
+    if (isIntro || isSubintro) {
+        phoneVariant = "large";
+    } else if (isCameraScene) {
+        phoneVariant = "medium";
+    } else if (isBodyScene) {
+        phoneVariant = "small";
+    } else if (isScore) {
+        // Score scene: winner large, loser medium (handled per phone below)
+        phoneVariant = "large";
+    }
+
     const renderPhoneCard = (phone: Phone, side: 'A' | 'B') => {
         const isWinner = winner === side;
         const isLoser = winner !== side && winner !== 'TIE' && winner !== null;
 
+        // Special sizing for score scene
+        let currentVariant = phoneVariant;
+        if (isScore && isLoser) {
+            currentVariant = "medium";
+        }
+
         return (
             <div className={cn(
-                "flex flex-col items-center gap-6 transition-all duration-500",
+                "flex flex-col items-center gap-6 transition-all duration-500 min-w-0",
                 side === 'A' ? "animate-in slide-in-from-left-8 duration-700" : "animate-in slide-in-from-right-8 duration-700",
-                isLoser ? "opacity-40 scale-90 grayscale" : "opacity-100 scale-100"
+                isLoser && isScore ? "opacity-70 grayscale-[0.2]" : isLoser ? "opacity-40 scale-90 grayscale" : "opacity-100 scale-100",
+                isCameraScene && isWinner ? "scale-[1.03]" : ""
             )}>
-                <div className={cn(
-                    "w-48 h-80 rounded-[2rem] border-[6px] shadow-2xl relative overflow-hidden transition-all duration-500",
-                    isWinner ? "border-green-500 ring-4 ring-green-500/30" : "border-slate-700",
-                    "bg-gradient-to-b from-slate-800 to-black"
-                )}>
-                    {/* Screen area inside the phone frame */}
-                    <div className="w-full h-full overflow-hidden flex items-center justify-center bg-white/5">
-                        {phone.image ? (
-                            <img
-                                src={phone.image.dataUrl}
-                                alt={`${phone.name} image`}
-                                className="max-w-full max-h-full object-contain object-center select-none pointer-events-none"
-                                draggable={false}
-                            />
-                        ) : (
-                            <div className="text-xs text-slate-400">NO IMAGE</div>
-                        )}
-                    </div>
-                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 h-4 bg-slate-700 rounded-full" />
+                {/* Phone cutout with premium styling */}
+                <div className="relative w-full h-full flex items-center justify-center">
+                    <PhoneCutout
+                        src={phone.image?.dataUrl ?? null}
+                        alt={phone.name}
+                        variant={currentVariant}
+                    />
 
+                    {/* Winner trophy overlay */}
                     {isWinner && (
-                        <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center pointer-events-none">
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                             <div className="bg-green-500 text-white p-2 rounded-full transform -rotate-12 shadow-lg scale-150">
                                 <Trophy className="w-6 h-6" />
                             </div>
                         </div>
                     )}
                 </div>
+
+                {/* Phone name */}
                 <div className="text-center">
                     <h1 className="text-3xl font-black text-white drop-shadow-lg">
                         {phone.name}

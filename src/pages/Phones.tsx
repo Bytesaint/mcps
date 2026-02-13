@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Smartphone, Plus, Pencil, Trash2, Search, X, Image as ImageIcon, Upload } from 'lucide-react';
+import { Smartphone, Plus, Pencil, Trash2, Search, X, Image as ImageIcon, Upload, Info } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/Table';
@@ -326,6 +326,10 @@ export function Phones() {
                                     <p className="text-[10px] text-slate-500 leading-relaxed">
                                         JPEG, PNG or WebP. Store locally as base64.<br />
                                         Recommend 1000x1000px for best preview quality.
+                                    </p>
+                                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 inline-flex items-center gap-1">
+                                        <Info className="w-3 h-3" />
+                                        Best results: upload PNG with transparent background.
                                     </p>
                                 </div>
                             </div>
