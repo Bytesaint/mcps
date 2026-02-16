@@ -12,6 +12,7 @@ import { ProjectDetail } from './pages/ProjectDetail';
 import { Settings } from './pages/Settings';
 import { ensureSeedData } from './storage/seed';
 import { initThemeListener } from './lib/theme';
+import { EditorLayout } from './features/editor/EditorLayout';
 import { applyAppearance } from './theme/applyTheme';
 import { getAppearanceSetting } from './store/settingsStore';
 
@@ -46,6 +47,7 @@ function App() {
                             <Route path="/generate" element={<Generate />} />
                             <Route path="/projects" element={<Projects />} />
                             <Route path="/projects/:id" element={<ProjectDetail />} />
+                            <Route path="/editor/:projectId" element={<EditorLayout />} />
                             <Route path="/settings" element={<Settings />} />
                             <Route path="*" element={<Navigate to="/" replace />} />
                         </Route>

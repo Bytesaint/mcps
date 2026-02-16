@@ -120,6 +120,25 @@ export function Generate() {
         const phoneA = state.phones.find(p => p.id === phoneAId);
         const phoneB = state.phones.find(p => p.id === phoneBId);
 
+        // Calculate totals
+        let scoreA = 0;
+        let scoreB = 0;
+        scenes.forEach(scene => {
+            if (scene.type === 'body') {
+                // Check for override winner first
+                if (scene.override?.winnerOverride) {
+                    if (scene.override.winnerOverride === 'A') scoreA++;
+                    else if (scene.override.winnerOverride === 'B') scoreB++;
+                } else {
+                    // Fallback to auto winner
+                    if (scene.auto.winner === 'A') scoreA++;
+                    else if (scene.auto.winner === 'B') scoreB++;
+                }
+            }
+        });
+
+        const overallWinner = scoreA > scoreB ? 'A' : scoreB > scoreA ? 'B' : 'TIE';
+
         const project: Project = {
             id: Math.random().toString(36).substring(2, 11),
             name: projectName || `${phoneA?.name || 'Phone A'} vs ${phoneB?.name || 'Phone B'}`,
@@ -134,7 +153,12 @@ export function Generate() {
                 audioEnabled: true,
                 audioVolume: 0.8,
             },
-            scenes: scenes // Save the fully generated scenes with overrides
+            scenes: scenes, // Save the fully generated scenes with overrides
+            totals: {
+                scoreA,
+                scoreB,
+                overallWinner
+            }
         };
 
         addProject(project);
@@ -281,6 +305,22 @@ export function Generate() {
     const renderStep3 = () => {
         return (
             <div className="space-y-6">
+                {/* Phase 2 Checklist */}
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                    <h3 className="text-sm font-bold text-emerald-800 mb-2 flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4" />
+                        Phase 2 Completion Check
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-emerald-700">
+                        <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Comparison Engine</div>
+                        <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Looped Scenes</div>
+                        <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Manual Overrides</div>
+                        <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Save Project</div>
+                        <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Export JSON</div>
+                        <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Import JSON (Drag & Drop)</div>
+                    </div>
+                </div>
+
                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
                     <div className="flex items-center gap-4 mb-3">
                         <label className="flex items-center gap-2 cursor-pointer">

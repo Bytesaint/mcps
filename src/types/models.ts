@@ -49,8 +49,79 @@ export interface Template {
     updatedAt: string; // ISO string
 }
 
-// Scene Inspector Types
+// Scene Editor Types
 export type SceneType = "intro" | "subintro" | "body" | "camera" | "score";
+export type SceneElementType = 'text' | 'image' | 'box' | 'icon';
+
+export interface SceneElementCommon {
+    id: string;
+    type: SceneElementType;
+    name: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    rotation?: number;
+    opacity?: number;
+    zIndex: number;
+    locked?: boolean;
+    hidden?: boolean;
+}
+
+export interface SceneTextElement extends SceneElementCommon {
+    type: 'text';
+    content: string; // can be a placeholder string like "{{phoneA.name}}"
+    fontSize: number;
+    fontFamily?: string;
+    fontWeight?: string | number;
+    fontStyle?: string;
+    textAlign?: 'left' | 'center' | 'right';
+    color: string;
+    backgroundColor?: string;
+    padding?: number;
+    borderRadius?: number;
+}
+
+export interface SceneImageElement extends SceneElementCommon {
+    type: 'image';
+    sourceType: 'phoneA' | 'phoneB' | 'custom';
+    customImageId?: string; // key for IDB
+    fit: 'contain' | 'cover' | 'fill';
+    crop?: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
+    borderWidth?: number;
+    borderColor?: string;
+    borderRadius?: number;
+}
+
+export interface SceneBoxElement extends SceneElementCommon {
+    type: 'box';
+    backgroundColor: string;
+    borderColor?: string;
+    borderWidth?: number;
+    borderRadius?: number;
+}
+
+export type SceneElement = SceneTextElement | SceneImageElement | SceneBoxElement;
+
+export interface KenBurnsEffect {
+    enabled: boolean;
+    start: { scale: number; x: number; y: number };
+    end: { scale: number; x: number; y: number };
+    easing?: 'linear' | 'ease-in' | 'ease-out' | 'ease-in-out';
+}
+
+export interface SceneLayout {
+    elements: SceneElement[];
+    backgroundColor?: string;
+    backgroundImageId?: string; // key for IDB
+}
+
+// ... existing types ...
 
 export interface SceneOverride {
     enabled?: boolean;              // allow disabling a scene from playback
@@ -64,6 +135,13 @@ export interface SceneOverride {
         sfxEnabled?: boolean;            // per-scene sfx enable/disable (future)
     };
     winnerOverride?: "A" | "B" | "TIE" | null; // for body scenes (spec winner)
+
+    // Phase 3: Visual Editor
+    layout?: SceneLayout;
+    motion?: {
+        type: "none" | "kenburns";
+        kenburns?: KenBurnsEffect;
+    };
 }
 
 export interface SceneAutoData {
@@ -99,6 +177,20 @@ export interface PreviewSettings {
     musicLoop?: boolean;
 }
 
+// Phase 3: Project Settings
+export interface ProjectAudioSettings {
+    enabled: boolean;
+    volume: number;
+    trackId?: string; // key for IDB
+    loop?: boolean;
+}
+
+export interface ProjectExportSettings {
+    resolution: '720p' | '1080p';
+    fps: 30 | 60;
+    format: 'webm' | 'mp4';
+}
+
 export interface Project {
     id: string;
     name: string;
@@ -108,6 +200,16 @@ export interface Project {
     aspectRatioOverride?: AspectRatio;
     previewSettings?: PreviewSettings;
     scenes?: ProjectScene[]; // For scene inspector overrides
+    totals?: {
+        scoreA: number;
+        scoreB: number;
+        overallWinner: 'A' | 'B' | 'TIE';
+    };
+
+    // Phase 3: New Settings
+    audio?: ProjectAudioSettings;
+    export?: ProjectExportSettings;
+
     createdAt: string; // ISO string
     updatedAt: string; // ISO string
 }
