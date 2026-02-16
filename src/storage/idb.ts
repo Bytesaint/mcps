@@ -16,8 +16,10 @@ let dbPromise: Promise<IDBPDatabase<MPCSDB>> | null = null;
 function getDB() {
     if (!dbPromise) {
         dbPromise = openDB<MPCSDB>(DB_NAME, DB_VERSION, {
-            upgrade(db) {
-                db.createObjectStore(STORE_NAME);
+            upgrade(db: IDBPDatabase<MPCSDB>) {
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME);
+                }
             },
         });
     }

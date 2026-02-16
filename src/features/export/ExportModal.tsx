@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Button } from '../../components/Button';
-import { Project, ProjectExportSettings } from '../../types/models';
+import { Project } from '../../types/models';
 import { useVideoExport, ExportOptions } from './useVideoExport';
-import { Download, X, Loader2 } from 'lucide-react';
+import { Download, X } from 'lucide-react';
 
 interface ExportModalProps {
     project: Project;
@@ -63,8 +63,8 @@ export function ExportModal({ project, isOpen, onClose }: ExportModalProps) {
                                             key={res}
                                             onClick={() => setSettings(s => ({ ...s, resolution: res as any }))}
                                             className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all ${settings.resolution === res
-                                                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                                                    : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                                                ? 'border-blue-600 bg-blue-50 text-blue-700'
+                                                : 'border-slate-200 hover:border-slate-300 text-slate-600'
                                                 }`}
                                         >
                                             {res}
@@ -82,8 +82,8 @@ export function ExportModal({ project, isOpen, onClose }: ExportModalProps) {
                                             key={fps}
                                             onClick={() => setSettings(s => ({ ...s, fps: fps as any }))}
                                             className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all ${settings.fps === fps
-                                                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                                                    : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                                                ? 'border-blue-600 bg-blue-50 text-blue-700'
+                                                : 'border-slate-200 hover:border-slate-300 text-slate-600'
                                                 }`}
                                         >
                                             {fps} FPS
@@ -104,8 +104,8 @@ export function ExportModal({ project, isOpen, onClose }: ExportModalProps) {
                                             key={fmt.id}
                                             onClick={() => setSettings(s => ({ ...s, format: fmt.id as any }))}
                                             className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all ${settings.format === fmt.id
-                                                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                                                    : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                                                ? 'border-blue-600 bg-blue-50 text-blue-700'
+                                                : 'border-slate-200 hover:border-slate-300 text-slate-600'
                                                 }`}
                                         >
                                             {fmt.label}

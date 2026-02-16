@@ -1,4 +1,4 @@
-import { Project, ProjectScene, SceneElement, SceneTextElement } from '../../types/models';
+import { Project, ProjectScene, SceneTextElement } from '../../types/models';
 import { getAssetUrl } from '../../storage/idb';
 
 interface RenderContext {
@@ -12,7 +12,7 @@ interface RenderContext {
 }
 
 // Helper: Resolve placeholders (simple version)
-function resolveText(content: string, project: Project, scene: ProjectScene): string {
+function resolveText(content: string, _project: Project, scene: ProjectScene): string {
     // This is a simplified placeholder resolver. 
     // In a real app we'd parse {{phoneA.name}} etc.
     let text = content;
@@ -34,7 +34,7 @@ function resolveText(content: string, project: Project, scene: ProjectScene): st
     return text;
 }
 
-export async function renderSceneToCanvas({ ctx, width, height, project, scene, timeMs, fps }: RenderContext) {
+export async function renderSceneToCanvas({ ctx, width, height, project, scene, timeMs: _timeMs, fps: _fps }: RenderContext) {
     // 1. Clear Canvas
     ctx.clearRect(0, 0, width, height);
 
@@ -72,10 +72,10 @@ export async function renderSceneToCanvas({ ctx, width, height, project, scene, 
         // Let's assume elements x,y,w,h are in "logical pixels" based on 1080x1920 (9:16)
         // and 'width'/'height' passed to function are the target render size.
         // We'll calculate a scale factor.
-        const REF_WIDTH = 1080;
-        const REF_HEIGHT = 1920;
-        const scaleX = width / REF_WIDTH;
-        const scaleY = height / REF_HEIGHT;
+        // const REF_WIDTH = 1080;
+        // const REF_HEIGHT = 1920;
+        // const scaleX = width / REF_WIDTH;
+        // const scaleY = height / REF_HEIGHT;
         // Or specific aspect fit? Let's assume simple scale for now.
         // Actually, for MP4 export we usually want exactly 1080x1920 or 720x1280.
 
@@ -133,13 +133,13 @@ export async function renderSceneToCanvas({ ctx, width, height, project, scene, 
                 if (url) {
                     const img = new Image();
                     img.src = url;
-                    await new Promise((resolve, reject) => {
-                        img.onload = resolve;
-                        img.onerror = resolve; // don't crash text render
+                    await new Promise((resolve) => {
+                        img.onload = () => resolve(null);
+                        img.onerror = () => resolve(null); // don't crash text render
                     });
 
                     // Draw image with object-fit logic
-                    drawImageProp(ctx, img, x, y, w, h, 0, 0, el.fit === 'contain' ? 0 : 0.5);
+                    drawImageProp(ctx, img, x, y, w, h, 0, 0);
                 }
             }
         } else if (el.type === 'text') {
@@ -179,7 +179,7 @@ export async function renderSceneToCanvas({ ctx, width, height, project, scene, 
  * Helper to draw image with object-fit (cover/contain) logic on canvas
  * adapted from standard solutions
  */
-function drawImageProp(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, w: number, h: number, offsetX: number, offsetY: number, objectPositionKey: number = 0.5) {
+function drawImageProp(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, w: number, h: number, offsetX: number, offsetY: number) {
     if (arguments.length === 2) {
         x = y = 0;
         w = ctx.canvas.width;

@@ -148,8 +148,8 @@ export function useVideoExport() {
                         'output_muxed.webm'
                     ]);
 
-                    const data = await ffmpeg.readFile('output_muxed.webm');
-                    videoBlob = new Blob([data], { type: 'video/webm' });
+                    const data = await ffmpeg.readFile('output_muxed.webm') as Uint8Array;
+                    videoBlob = new Blob([data as any], { type: 'video/webm' });
                 }
 
                 downloadBlob(videoBlob, `${project.name}.webm`);
@@ -176,8 +176,8 @@ export function useVideoExport() {
 
                 await ffmpeg.exec(cmd);
 
-                const data = await ffmpeg.readFile('output.mp4');
-                const blob = new Blob([data], { type: 'video/mp4' });
+                const data = await ffmpeg.readFile('output.mp4') as Uint8Array;
+                const blob = new Blob([data as any], { type: 'video/mp4' });
                 downloadBlob(blob, `${project.name}.mp4`);
 
                 // Cleanup if needed (skipping for now)

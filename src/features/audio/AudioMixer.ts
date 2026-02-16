@@ -12,10 +12,8 @@ interface AudioTrack {
 
 export class AudioMixer {
     private ctx: OfflineAudioContext;
-    private durationMs: number;
 
     constructor(durationMs: number, sampleRate: number = 44100) {
-        this.durationMs = durationMs;
         // Create context
         // length = sampleRate * durationSeconds
         const length = Math.ceil((durationMs / 1000) * sampleRate);
@@ -71,7 +69,7 @@ export class AudioMixer {
             }
 
         } catch (error) {
-            console.error(`Failed to mix track ${track.id}`, error);
+            console.error(`AudioMixer: Failed to mix track ${track.id}. Url: ${track.url}, AssetId: ${track.assetId}`, error);
         }
     }
 
@@ -86,6 +84,17 @@ export class AudioMixer {
         let sample;
         let offset = 0;
         let pos = 0;
+
+        // Helper functions for writing data
+        const setUint16 = (data: number) => {
+            view.setUint16(pos, data, true);
+            pos += 2;
+        };
+
+        const setUint32 = (data: number) => {
+            view.setUint32(pos, data, true);
+            pos += 4;
+        };
 
         // write WAVE header
         setUint32(0x46464952); // "RIFF"
@@ -120,15 +129,5 @@ export class AudioMixer {
         }
 
         return new Blob([buffer], { type: "audio/wav" });
-
-        function setUint16(data: any) {
-            view.setUint16(pos, data, true);
-            pos += 2;
-        }
-
-        function setUint32(data: any) {
-            view.setUint32(pos, data, true);
-            pos += 4;
-        }
     }
 }

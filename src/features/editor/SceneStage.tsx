@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { Rnd } from 'react-rnd';
 import { Scene, SceneElement } from '../../types/models';
 import { cn } from '../../lib/utils'; // Assuming utils exists
@@ -41,10 +41,10 @@ export function SceneStage({ scene, zoom, onUpdateElement, onSelectElement, sele
                     key={el.id}
                     size={{ width: el.width, height: el.height }}
                     position={{ x: el.x, y: el.y }}
-                    onDragStop={(e, d) => {
+                    onDragStop={(_e, d) => {
                         onUpdateElement(el.id, { x: d.x, y: d.y });
                     }}
-                    onResizeStop={(e, direction, ref, delta, position) => {
+                    onResizeStop={(_e, _direction, ref, _delta, position) => {
                         onUpdateElement(el.id, {
                             width: parseInt(ref.style.width),
                             height: parseInt(ref.style.height),

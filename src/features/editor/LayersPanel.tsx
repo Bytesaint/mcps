@@ -1,4 +1,4 @@
-import { GripVertical, Eye, EyeOff, Lock, Unlock, Trasnsh2 } from 'lucide-react';
+import { GripVertical, Eye, EyeOff, Lock, Unlock, Trash } from 'lucide-react';
 import { SceneElement } from '../../types/models';
 import { cn } from '../../lib/utils';
 
@@ -7,10 +7,11 @@ interface LayersPanelProps {
     selectedElementId: string | null;
     onSelectElement: (id: string) => void;
     onUpdateElement: (id: string, updates: Partial<SceneElement>) => void;
-    onReorderElement: (dragIndex: number, hoverIndex: number) => void; // Placeholder for future drag-sort
+    onDeleteElement: (id: string) => void;
+    onReorderElement: (dragIndex: number, hoverIndex: number) => void;
 }
 
-export function LayersPanel({ elements, selectedElementId, onSelectElement, onUpdateElement }: LayersPanelProps) {
+export function LayersPanel({ elements, selectedElementId, onSelectElement, onUpdateElement, onDeleteElement }: LayersPanelProps) {
     // Sort elements by zIndex descending (top layers first)
     const sortedElements = [...elements].sort((a, b) => b.zIndex - a.zIndex);
 
@@ -65,6 +66,16 @@ export function LayersPanel({ elements, selectedElementId, onSelectElement, onUp
                                 title={el.hidden ? "Show" : "Hide"}
                             >
                                 {el.hidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDeleteElement(el.id);
+                                }}
+                                className="p-1 rounded hover:bg-slate-600 text-slate-400 hover:text-red-400"
+                                title="Delete"
+                            >
+                                <Trash className="w-3 h-3" />
                             </button>
                         </div>
                     </div>

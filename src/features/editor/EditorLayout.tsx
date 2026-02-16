@@ -15,7 +15,7 @@ import { ExportModal } from '../export/ExportModal';
 export function EditorLayout() {
     const { projectId } = useParams();
     const navigate = useNavigate();
-    const { state, dispatch } = useAppStore();
+    const { state, updateProject } = useAppStore();
     const { toast } = useToast();
 
     const [isUnlocked, setIsUnlocked] = useState(false);
@@ -58,7 +58,7 @@ export function EditorLayout() {
         const index = elements.findIndex(e => e.id === id);
 
         if (index !== -1) {
-            elements[index] = { ...elements[index], ...updates };
+            elements[index] = { ...elements[index], ...updates } as SceneElement;
 
             const updatedScenes = project.scenes?.map(s =>
                 s.id === currentScene.id
@@ -77,11 +77,35 @@ export function EditorLayout() {
 
             const updatedProject = { ...project, scenes: updatedScenes };
             setProject(updatedProject); // Local optimistic update
-            dispatch({
-                type: 'MPCS_PROJECTS_EDIT',
-                payload: updatedProject
-            });
+            updateProject(updatedProject);
         }
+    };
+
+    const handleDeleteElement = (id: string) => {
+        if (!project || !currentScene) return;
+
+        const elements = (currentScene.override?.layout?.elements || []).filter(e => e.id !== id);
+
+        const updatedScenes = project.scenes?.map(s =>
+            s.id === currentScene.id
+                ? {
+                    ...s,
+                    override: {
+                        ...(s.override || {}),
+                        layout: {
+                            ...(s.override?.layout || { elements: [] }),
+                            elements
+                        }
+                    }
+                }
+                : s
+        );
+
+        const updatedProject = { ...project, scenes: updatedScenes };
+        setProject(updatedProject);
+        updateProject(updatedProject);
+
+        if (selectedElementId === id) setSelectedElementId(null);
     };
 
     const handleAddElement = (type: SceneElementType) => {
@@ -135,10 +159,7 @@ export function EditorLayout() {
 
         const updatedProject = { ...project, scenes: updatedScenes };
         setProject(updatedProject);
-        dispatch({
-            type: 'MPCS_PROJECTS_EDIT',
-            payload: updatedProject
-        });
+        updateProject(updatedProject);
 
         setSelectedElementId(newElement.id);
     };
@@ -207,6 +228,7 @@ export function EditorLayout() {
                             selectedElementId={selectedElementId}
                             onSelectElement={handleSelectElement}
                             onUpdateElement={handleUpdateElement}
+                            onDeleteElement={handleDeleteElement}
                             onReorderElement={() => { }}
                         />
                     </div>

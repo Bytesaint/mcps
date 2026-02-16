@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Lock, Unlock, ArrowRight } from 'lucide-react';
-import { Button } from './Button';
+import { Lock } from 'lucide-react';
 import { cn } from '../lib/utils'; // Assuming utils exists
 
 interface SecureGateProps {

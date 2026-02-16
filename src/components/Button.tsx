@@ -3,7 +3,7 @@ import { cn } from '../lib/utils';
 import { ActionId } from '../actionMap';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'secondary' | 'danger';
+    variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
     size?: 'sm' | 'md' | 'lg';
     action?: ActionId;
     children: React.ReactNode;
@@ -29,6 +29,7 @@ export function Button({
         primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-sm",
         secondary: "bg-white text-slate-900 border border-slate-200 hover:bg-slate-50 shadow-sm",
         danger: "bg-red-600 text-white hover:bg-red-700 shadow-sm",
+        ghost: "bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900",
     };
 
     return (
