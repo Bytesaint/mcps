@@ -1,5 +1,5 @@
 import { SceneElement } from '../../types/models';
-import { cn } from '../../lib/utils';
+
 
 interface PropertiesPanelProps {
     element: SceneElement | null;
