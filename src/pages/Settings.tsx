@@ -1,4 +1,4 @@
-import { Palette, Database, Shield, Moon, Sun, ArrowRight, Save, Maximize2, X } from 'lucide-react';
+import { Palette, Database, Shield, Moon, Sun, ArrowRight, Save, Maximize2, X, Film } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -13,7 +13,11 @@ import {
     saveDefaultAspectRatio,
     getAppearanceSetting,
     saveAppearanceSetting,
-    Appearance
+    Appearance,
+    getPhase3Enabled,
+    savePhase3Enabled,
+    getRenderServerUrl,
+    saveRenderServerUrl,
 } from '../store/settingsStore';
 import { applyAppearance } from '../theme/applyTheme';
 import {
@@ -44,6 +48,11 @@ export function Settings() {
     const [audioSettings, setAudioSettings] = useState<AudioSettingsType>(() => getAudioSettings());
     const [audioAssets, setAudioAssets] = useState<AudioAssets>(() => getAudioAssets());
 
+    // Phase 3 State
+    const [phase3Enabled, setPhase3Enabled] = useState(() => getPhase3Enabled());
+    const [renderServerUrl, setRenderServerUrl] = useState(() => getRenderServerUrl());
+    const [serverTestStatus, setServerTestStatus] = useState<'idle' | 'testing' | 'ok' | 'error'>('idle');
+
     useEffect(() => {
         const loaded = getDefaultAspectRatioSetting();
         setAspectRatio(loaded);
@@ -57,7 +66,19 @@ export function Settings() {
         saveAudioSettings(audioSettings);
         saveAppearanceSetting(appearance);
         applyAppearance(appearance);
+        savePhase3Enabled(phase3Enabled);
+        saveRenderServerUrl(renderServerUrl);
         toast("Settings saved successfully", "success");
+    };
+
+    const handleTestServerConnection = async () => {
+        setServerTestStatus('testing');
+        try {
+            const res = await fetch(`${renderServerUrl.replace(/\/$/, '')}/health`, { signal: AbortSignal.timeout(5000) });
+            setServerTestStatus(res.ok ? 'ok' : 'error');
+        } catch {
+            setServerTestStatus('error');
+        }
     };
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: keyof AudioAssets) => {
@@ -579,6 +600,76 @@ export function Settings() {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* Phase 3 – Visual Editor & Export */}
+                    <Card>
+                        <div className="flex items-start gap-4">
+                            <div className="p-3 rounded-lg bg-violet-50 text-violet-600">
+                                <Film className="w-6 h-6" />
+                            </div>
+                            <div className="flex-1 space-y-4">
+                                <div>
+                                    <h3 className="text-lg font-semibold text-slate-900 mb-1">Phase 3: Visual Editor &amp; Remotion Export</h3>
+                                    <p className="text-sm text-slate-500">
+                                        Enable the drag-and-drop visual editor and real MP4 export via a local Remotion render server.
+                                    </p>
+                                </div>
+
+                                {/* Feature flag toggle */}
+                                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                    <div>
+                                        <p className="font-semibold text-slate-900 text-sm">Enable Visual Editor &amp; Remotion Export</p>
+                                        <p className="text-xs text-slate-500">When disabled, the WebM quick export and preview player still work normally.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setPhase3Enabled(v => !v)}
+                                        className={cn(
+                                            "w-12 h-6 rounded-full transition-colors relative flex items-center px-1 shrink-0 ml-4",
+                                            phase3Enabled ? "bg-violet-500" : "bg-slate-300"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "w-4 h-4 bg-white rounded-full transition-transform shadow-sm",
+                                            phase3Enabled ? "translate-x-6" : "translate-x-0"
+                                        )} />
+                                    </button>
+                                </div>
+
+                                {/* Render server URL */}
+                                {phase3Enabled && (
+                                    <div className="space-y-3">
+                                        <label className="block text-sm font-medium text-slate-700">
+                                            Render Server URL
+                                        </label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="url"
+                                                value={renderServerUrl}
+                                                onChange={(e) => { setRenderServerUrl(e.target.value); setServerTestStatus('idle'); }}
+                                                placeholder="http://localhost:3001"
+                                                className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none"
+                                            />
+                                            <Button
+                                                variant="secondary"
+                                                onClick={handleTestServerConnection}
+                                            >
+                                                {serverTestStatus === 'testing' ? 'Testing…' : 'Test'}
+                                            </Button>
+                                        </div>
+                                        {serverTestStatus === 'ok' && (
+                                            <p className="text-xs text-green-600 font-medium">✓ Connected to render server</p>
+                                        )}
+                                        {serverTestStatus === 'error' && (
+                                            <p className="text-xs text-red-600 font-medium">✗ Could not connect. Make sure render-server is running.</p>
+                                        )}
+                                        <p className="text-xs text-slate-400">
+                                            Start the local render server: <code className="bg-slate-100 px-1 py-0.5 rounded font-mono">cd render-server &amp;&amp; npm start</code>
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </Card>

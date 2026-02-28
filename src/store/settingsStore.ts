@@ -46,3 +46,24 @@ export function getAppearanceSetting(): Appearance {
 export function saveAppearanceSetting(appearance: Appearance): void {
     localStorage.setItem(THEME_KEY, appearance);
 }
+
+// ─── Phase 3 Feature Flag ─────────────────────────────────────────────────────
+
+const PHASE3_KEY = 'mpcs_phase3_enabled';
+const RENDER_SERVER_URL_KEY = 'mpcs_render_server_url';
+
+export function getPhase3Enabled(): boolean {
+    return localStorage.getItem(PHASE3_KEY) === 'true';
+}
+
+export function savePhase3Enabled(enabled: boolean): void {
+    localStorage.setItem(PHASE3_KEY, String(enabled));
+}
+
+export function getRenderServerUrl(): string {
+    return localStorage.getItem(RENDER_SERVER_URL_KEY) || 'http://localhost:3001';
+}
+
+export function saveRenderServerUrl(url: string): void {
+    localStorage.setItem(RENDER_SERVER_URL_KEY, url);
+}

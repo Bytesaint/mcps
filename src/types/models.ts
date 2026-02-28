@@ -53,16 +53,18 @@ export interface Template {
 export type SceneType = "intro" | "subintro" | "body" | "camera" | "score";
 export type SceneElementType = 'text' | 'image' | 'box' | 'icon';
 
+// IMPORTANT: x, y, width, height are all stored as PERCENTAGES (0–100)
+// relative to the stage dimensions. This makes layouts resolution-independent.
 export interface SceneElementCommon {
     id: string;
     type: SceneElementType;
     name: string;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    rotation?: number;
-    opacity?: number;
+    x: number;      // 0–100 % of stage width
+    y: number;      // 0–100 % of stage height
+    width: number;  // 0–100 % of stage width
+    height: number; // 0–100 % of stage height
+    rotation?: number; // degrees
+    opacity?: number;  // 0–1
     zIndex: number;
     locked?: boolean;
     hidden?: boolean;
@@ -70,8 +72,8 @@ export interface SceneElementCommon {
 
 export interface SceneTextElement extends SceneElementCommon {
     type: 'text';
-    content: string; // can be a placeholder string like "{{phoneA.name}}"
-    fontSize: number;
+    content: string; // literal text or placeholder like "{{phoneA.name}}"
+    fontSize: number; // relative units (will be scaled at render time)
     fontFamily?: string;
     fontWeight?: string | number;
     fontStyle?: string;
@@ -87,11 +89,11 @@ export interface SceneImageElement extends SceneElementCommon {
     sourceType: 'phoneA' | 'phoneB' | 'custom';
     customImageId?: string; // key for IDB
     fit: 'contain' | 'cover' | 'fill';
+    // Crop as zoom+pan (simpler to control than bbox)
     crop?: {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
+        zoom: number;  // 1.0 = no zoom, 2.0 = 2x zoom
+        panX: number;  // -1 to 1 (left to right)
+        panY: number;  // -1 to 1 (top to bottom)
     };
     borderWidth?: number;
     borderColor?: string;
@@ -107,6 +109,66 @@ export interface SceneBoxElement extends SceneElementCommon {
 }
 
 export type SceneElement = SceneTextElement | SceneImageElement | SceneBoxElement;
+
+// Per-scene timing configuration (stored in SceneOverride)
+export interface SceneTiming {
+    durationMs: number;
+    transition: {
+        type: 'none' | 'fade' | 'slide';
+        durationMs: number;
+    };
+}
+
+// Export payload sent to the Remotion render server
+export interface ExportAsset {
+    mimeType: string;
+    base64: string;
+}
+
+export interface ExportPhoneData {
+    id: string;
+    name: string;
+    imageBase64?: string; // base64 encoded image
+    imageMimeType?: string;
+}
+
+export interface ProjectExportPayload {
+    project: {
+        id: string;
+        name: string;
+    };
+    scenes: Array<{
+        id: string;
+        type: SceneType;
+        label: string;
+        auto: SceneAutoData;
+        override?: SceneOverride;
+        timing?: SceneTiming;
+    }>;
+    phones: {
+        a: ExportPhoneData;
+        b: ExportPhoneData;
+    };
+    assets: Record<string, ExportAsset>; // keyed by assetKey (customImageId, trackId, etc.)
+    audioAssets: {
+        good?: string; // base64
+        bad?: string;  // base64
+        music?: string; // base64
+    };
+    audioSettings: {
+        enabled: boolean;
+        volume: number;
+        musicVolume: number;
+        musicLoop: boolean;
+    };
+    exportSettings: {
+        fps: 30 | 60;
+        resolution: '720p' | '1080p';
+        format: 'mp4' | 'webm';
+        width: number;
+        height: number;
+    };
+}
 
 export interface KenBurnsEffect {
     enabled: boolean;
