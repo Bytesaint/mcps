@@ -364,7 +364,7 @@ export function Settings() {
                         </div>
                     </Card>
 
-                    {/* Audio & Music (Preview Only) */}
+                    {/* Audio & Music */}
                     <Card>
                         <div className="flex items-start gap-4">
                             <div className="p-3 rounded-lg bg-orange-50 text-orange-600">
@@ -372,8 +372,8 @@ export function Settings() {
                             </div>
                             <div className="flex-1 space-y-6">
                                 <div>
-                                    <h3 className="text-lg font-semibold text-slate-900 mb-1">Audio & Music (Preview Only)</h3>
-                                    <p className="text-sm text-slate-500 mb-4 italic">Note: These sounds are for browser preview only and won't be in the final video export.</p>
+                                    <h3 className="text-lg font-semibold text-slate-900 mb-1">Audio & Music</h3>
+                                    <p className="text-sm text-slate-500 mb-4">Upload SFX and background music. Music will be mixed into video exports.</p>
                                 </div>
 
                                 {/* General Audio Toggle */}

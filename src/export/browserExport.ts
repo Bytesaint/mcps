@@ -16,6 +16,8 @@ export interface BrowserExportOptions {
     resolution?: '720p' | '1080p'; // default 720p
     aspectRatio?: AspectRatioPreset;
     includeAudio?: boolean;
+    /** Data URL (e.g. from FileReader) for the background music to bake into the export */
+    musicDataUrl?: string;
     onProgress?: (info: { currentTime: number; totalDurationMs: number; percent: number }) => void;
     signal?: AbortSignal;
 }
@@ -50,6 +52,7 @@ export async function exportProjectWebM(options: BrowserExportOptions): Promise<
         resolution = '720p',
         aspectRatio = '16:9',
         includeAudio = false,
+        musicDataUrl,
         onProgress,
         signal
     } = options;
@@ -71,32 +74,44 @@ export async function exportProjectWebM(options: BrowserExportOptions): Promise<
     // 2. Setup Audio (if included)
     let audioCtx: AudioContext | null = null;
     let destNode: MediaStreamAudioDestinationNode | null = null;
-    let audioMixedBlob: Blob | null = null;
 
-    if (includeAudio && project.audio?.enabled && project.audio.trackId) {
-        const { AudioMixer } = await import('../features/audio/AudioMixer').catch(() => ({ AudioMixer: null }));
-        if (AudioMixer) {
-            const mixer = new AudioMixer(totalDurationMs);
-            audioMixedBlob = await mixer.mix([{
-                id: 'main',
-                assetId: project.audio.trackId,
-                volume: project.audio.volume ?? 0.5,
-                loop: project.audio.loop ?? true,
-                startOffsetMs: 0
-            }]);
+    // Resolve the audio source: prefer explicit musicDataUrl, then fall back to IDB assetId on project
+    const audioSource: { dataUrl?: string; assetId?: string; volume: number; loop: boolean } | null =
+        includeAudio && musicDataUrl
+            ? { dataUrl: musicDataUrl, volume: 0.8, loop: true }
+            : includeAudio && project.audio?.enabled && project.audio.trackId
+                ? { assetId: project.audio.trackId, volume: project.audio.volume ?? 0.5, loop: project.audio.loop ?? true }
+                : null;
 
-            // Create audio context and destination node to embed into our capture stream
-            if (audioMixedBlob) {
-                audioCtx = new AudioContext();
-                destNode = audioCtx.createMediaStreamDestination();
+    if (audioSource) {
+        try {
+            const { AudioMixer } = await import('../features/audio/AudioMixer').catch(() => ({ AudioMixer: null }));
+            if (AudioMixer) {
+                const mixer = new AudioMixer(totalDurationMs);
+                const audioMixedBlob = await mixer.mix([{
+                    id: 'main',
+                    assetId: audioSource.assetId,
+                    url: audioSource.dataUrl,
+                    volume: audioSource.volume,
+                    loop: audioSource.loop,
+                    startOffsetMs: 0
+                }]);
 
-                const arrayBuffer = await audioMixedBlob.arrayBuffer();
-                const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-                const source = audioCtx.createBufferSource();
-                source.buffer = audioBuffer;
-                source.connect(destNode);
-                source.start(0);
+                // Create audio context and destination node to embed into our capture stream
+                if (audioMixedBlob) {
+                    audioCtx = new AudioContext();
+                    destNode = audioCtx.createMediaStreamDestination();
+
+                    const arrayBuffer = await audioMixedBlob.arrayBuffer();
+                    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                    const source = audioCtx.createBufferSource();
+                    source.buffer = audioBuffer;
+                    source.connect(destNode);
+                    source.start(0);
+                }
             }
+        } catch (audioErr) {
+            console.warn('Audio mixing failed, exporting without audio:', audioErr);
         }
     }
 

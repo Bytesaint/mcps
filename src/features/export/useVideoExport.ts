@@ -7,6 +7,8 @@ export interface ExportOptions {
     resolution: '720p' | '1080p';
     fps: 24 | 30 | 60;
     includeAudio: boolean;
+    /** Data URL of the background music track to bake into the export */
+    musicDataUrl?: string;
 }
 
 export function useVideoExport() {
@@ -31,6 +33,7 @@ export function useVideoExport() {
                 resolution: options.resolution,
                 aspectRatio: project.aspectRatioOverride?.preset || '16:9',
                 includeAudio: options.includeAudio,
+                musicDataUrl: options.musicDataUrl,
                 onProgress: ({ percent }) => {
                     setProgress(percent);
                     if (percent === 100) setStatusText('Finalizing Video...');

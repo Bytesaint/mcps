@@ -8,10 +8,11 @@ import { useState, useEffect } from 'react';
 import { Button } from '../../components/Button';
 import type { Project, ProjectScene } from '../../types/models';
 import { useVideoExport, ExportOptions } from './useVideoExport';
-import { Download, X, Film } from 'lucide-react';
+import { Download, X, Film, Music } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { ACTIONS } from '../../actionMap';
 import { generateScenes } from '../../engine/projectLogic';
+import { getAudioAssets } from '../../audio/audioStore';
 
 interface ExportModalProps {
     project: Project;
@@ -23,10 +24,15 @@ export function ExportModal({ project, isOpen, onClose }: ExportModalProps) {
     const { state } = useAppStore();
     const { exportProject, cancelExport, isExporting, progress, statusText } = useVideoExport();
 
+    // Load music asset from Settings (stored as data URL in localStorage)
+    const musicAsset = getAudioAssets().music;
+    const hasMusicAsset = !!musicAsset?.dataUrl;
+
     const [settings, setSettings] = useState<ExportOptions>({
         resolution: '720p',
         fps: 30,
-        includeAudio: false
+        includeAudio: hasMusicAsset, // auto-enable if music is available
+        musicDataUrl: hasMusicAsset ? musicAsset!.dataUrl : undefined,
     });
 
     const [scenes, setScenes] = useState<ProjectScene[]>(project.scenes || []);
@@ -121,20 +127,36 @@ export function ExportModal({ project, isOpen, onClose }: ExportModalProps) {
 
                             {/* Audio */}
                             <div className="space-y-2 pt-2">
-                                <label className="flex items-center gap-2 cursor-pointer group">
-                                    <input
-                                        type="checkbox"
-                                        checked={settings.includeAudio}
-                                        onChange={(e) => setSettings(s => ({ ...s, includeAudio: e.target.checked }))}
-                                        className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
-                                    />
-                                    <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">
-                                        Include audio (experimental)
-                                    </span>
-                                </label>
-                                <p className="text-xs text-slate-500 ml-6">
-                                    Injects background music into the WebM stream. May not be supported on all browsers.
-                                </p>
+                                {hasMusicAsset ? (
+                                    <label className="flex items-center gap-2 cursor-pointer group">
+                                        <input
+                                            type="checkbox"
+                                            checked={settings.includeAudio}
+                                            onChange={(e) => setSettings(s => ({
+                                                ...s,
+                                                includeAudio: e.target.checked,
+                                                musicDataUrl: e.target.checked ? musicAsset!.dataUrl : undefined,
+                                            }))}
+                                            className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                                        />
+                                        <Music className="w-4 h-4 text-blue-500" />
+                                        <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">
+                                            Include background music in export
+                                        </span>
+                                    </label>
+                                ) : (
+                                    <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                        <Music className="w-4 h-4 text-amber-500 shrink-0" />
+                                        <p className="text-xs text-amber-700">
+                                            No music uploaded. Go to <strong>Settings → Audio &amp; Music</strong> to add a track.
+                                        </p>
+                                    </div>
+                                )}
+                                {hasMusicAsset && settings.includeAudio && (
+                                    <p className="text-xs text-slate-500 ml-6">
+                                        <strong>{musicAsset!.name}</strong> will be mixed into the WebM export.
+                                    </p>
+                                )}
                             </div>
                         </div>
                     )}
