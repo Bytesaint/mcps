@@ -16,8 +16,6 @@ import {
     Appearance,
     getPhase3Enabled,
     savePhase3Enabled,
-    getRenderServerUrl,
-    saveRenderServerUrl,
 } from '../store/settingsStore';
 import { applyAppearance } from '../theme/applyTheme';
 import {
@@ -50,8 +48,6 @@ export function Settings() {
 
     // Phase 3 State
     const [phase3Enabled, setPhase3Enabled] = useState(() => getPhase3Enabled());
-    const [renderServerUrl, setRenderServerUrl] = useState(() => getRenderServerUrl());
-    const [serverTestStatus, setServerTestStatus] = useState<'idle' | 'testing' | 'ok' | 'error'>('idle');
 
     useEffect(() => {
         const loaded = getDefaultAspectRatioSetting();
@@ -67,19 +63,10 @@ export function Settings() {
         saveAppearanceSetting(appearance);
         applyAppearance(appearance);
         savePhase3Enabled(phase3Enabled);
-        saveRenderServerUrl(renderServerUrl);
         toast("Settings saved successfully", "success");
     };
 
-    const handleTestServerConnection = async () => {
-        setServerTestStatus('testing');
-        try {
-            const res = await fetch(`${renderServerUrl.replace(/\/$/, '')}/health`, { signal: AbortSignal.timeout(5000) });
-            setServerTestStatus(res.ok ? 'ok' : 'error');
-        } catch {
-            setServerTestStatus('error');
-        }
-    };
+
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: keyof AudioAssets) => {
         const file = e.target.files?.[0];
@@ -638,35 +625,15 @@ export function Settings() {
                                     </button>
                                 </div>
 
-                                {/* Render server URL */}
+                                {/* Render server URL replaced with Browser Export note */}
                                 {phase3Enabled && (
-                                    <div className="space-y-3">
-                                        <label className="block text-sm font-medium text-slate-700">
-                                            Render Server URL
-                                        </label>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="url"
-                                                value={renderServerUrl}
-                                                onChange={(e) => { setRenderServerUrl(e.target.value); setServerTestStatus('idle'); }}
-                                                placeholder="http://localhost:3001"
-                                                className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none"
-                                            />
-                                            <Button
-                                                variant="secondary"
-                                                onClick={handleTestServerConnection}
-                                            >
-                                                {serverTestStatus === 'testing' ? 'Testing…' : 'Test'}
-                                            </Button>
+                                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <Film className="w-5 h-5 text-slate-500" />
+                                            <p className="font-semibold text-slate-900 text-sm">Browser Export (WebM)</p>
                                         </div>
-                                        {serverTestStatus === 'ok' && (
-                                            <p className="text-xs text-green-600 font-medium">✓ Connected to render server</p>
-                                        )}
-                                        {serverTestStatus === 'error' && (
-                                            <p className="text-xs text-red-600 font-medium">✗ Could not connect. Make sure render-server is running.</p>
-                                        )}
-                                        <p className="text-xs text-slate-400">
-                                            Start the local render server: <code className="bg-slate-100 px-1 py-0.5 rounded font-mono">cd render-server &amp;&amp; npm start</code>
+                                        <p className="text-sm text-slate-600">
+                                            Export videos directly from your browser. Works on any device without the need for a local render server or external API.
                                         </p>
                                     </div>
                                 )}

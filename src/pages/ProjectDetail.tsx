@@ -14,6 +14,7 @@ import { useVideoPreviewPlayer } from '../preview/player/useVideoPreviewPlayer';
 import { PlayerBar } from '../preview/player/PlayerBar';
 import { generateScenes } from '../engine/projectLogic';
 import { Scene } from '../types/models';
+import { ExportModal } from '../features/export/ExportModal';
 
 export function ProjectDetail() {
     const { id } = useParams<{ id: string }>();
@@ -28,6 +29,7 @@ export function ProjectDetail() {
     // Interactive Preview State
     const [activeSceneKey, setActiveSceneKey] = useState<string>('intro');
     const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+    const [showExportModal, setShowExportModal] = useState(false);
 
     // Use stored scenes or generate on fly (backward compatibility)
     const scenes: Scene[] = project?.scenes || (template && phoneA && phoneB ? generateScenes(template, phoneA, phoneB, state.rules) : []);
@@ -128,11 +130,10 @@ export function ProjectDetail() {
                             <Edit2 className="w-4 h-4 mr-2" /> Edit
                         </Button>
                         <Button
-                            variant="secondary"
+                            variant="primary"
                             size="sm"
                             action={ACTIONS.MPCS_PROJECTS_EXPORT}
-                            disabled
-                            title="Coming in Phase 3"
+                            onClick={() => setShowExportModal(true)}
                         >
                             Export
                         </Button>
@@ -275,6 +276,14 @@ export function ProjectDetail() {
                     </div>
                 </Card>
             </div>
+
+            {project && (
+                <ExportModal
+                    project={project}
+                    isOpen={showExportModal}
+                    onClose={() => setShowExportModal(false)}
+                />
+            )}
         </div>
     );
 }

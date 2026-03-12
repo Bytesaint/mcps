@@ -37,7 +37,7 @@ export function Generate() {
     const [aspectRatio, setAspectRatio] = useState<AspectRatio>(() => getDefaultAspectRatioSetting());
     const [useProjectOverride, setUseProjectOverride] = useState(false);
 
-    // Phase 2B Preview State
+    // Phase 3 Preview State
     const [animationSettings, setAnimationSettings] = useState<AnimationSettings>(DEFAULT_ANIMATION_SETTINGS);
     const [activeSceneId, setActiveSceneId] = useState<string>('intro');
     // Initialize overrides from localStorage if available (simple draft persistence)
@@ -305,11 +305,11 @@ export function Generate() {
     const renderStep3 = () => {
         return (
             <div className="space-y-6">
-                {/* Phase 2 Checklist */}
+                {/* Phase 3 Checklist */}
                 <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
                     <h3 className="text-sm font-bold text-emerald-800 mb-2 flex items-center gap-2">
                         <CheckCircle className="w-4 h-4" />
-                        Phase 2 Completion Check
+                        Phase 3 Completion Check
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-emerald-700">
                         <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Comparison Engine</div>

@@ -75,17 +75,17 @@ export const ACTIONS = {
     MPCS_PREVIEW_ZOOM_RESET: "MPCS_PREVIEW_ZOOM_RESET",
     MPCS_PREVIEW_FULLSCREEN_TOGGLE: "MPCS_PREVIEW_FULLSCREEN_TOGGLE",
 
-    // Phase 2B Placeholders
+    // Phase 3 Placeholders
     MPCS_PHASE2B_ANIMATIONS_PLACEHOLDER: "MPCS_PHASE2B_ANIMATIONS_PLACEHOLDER",
     MPCS_PHASE2B_AUDIO_PLACEHOLDER: "MPCS_PHASE2B_AUDIO_PLACEHOLDER",
     MPCS_PHASE2B_JSON_PLACEHOLDER: "MPCS_PHASE2B_JSON_PLACEHOLDER",
     MPCS_PHASE2B_MUSIC_PLACEHOLDER: "MPCS_PHASE2B_MUSIC_PLACEHOLDER",
-    // Phase 2B - Animations
+    // Phase 3 - Animations
     MPCS_ANIM_TYPE_CHANGE: "MPCS_ANIM_TYPE_CHANGE",
     MPCS_ANIM_DURATION_CHANGE: "MPCS_ANIM_DURATION_CHANGE",
     MPCS_ANIM_TOGGLE_OVERRIDE: "MPCS_ANIM_TOGGLE_OVERRIDE",
 
-    // Phase 2B - Audio Scoring
+    // Phase 3 - Audio Scoring
     MPCS_AUDIO_TOGGLE: "MPCS_AUDIO_TOGGLE",
     MPCS_AUDIO_VOLUME_CHANGE: "MPCS_AUDIO_VOLUME_CHANGE",
     MPCS_AUDIO_UPLOAD_GOOD: "MPCS_AUDIO_UPLOAD_GOOD",
@@ -93,14 +93,14 @@ export const ACTIONS = {
     MPCS_AUDIO_TEST_GOOD: "MPCS_AUDIO_TEST_GOOD",
     MPCS_AUDIO_TEST_BAD: "MPCS_AUDIO_TEST_BAD",
 
-    // Phase 2B - Music
+    // Phase 3 - Music
     MPCS_MUSIC_UPLOAD: "MPCS_MUSIC_UPLOAD",
     MPCS_MUSIC_PLAY_PAUSE: "MPCS_MUSIC_PLAY_PAUSE",
     MPCS_MUSIC_VOLUME_CHANGE: "MPCS_MUSIC_VOLUME_CHANGE",
     MPCS_MUSIC_LOOP_TOGGLE: "MPCS_MUSIC_LOOP_TOGGLE",
     MPCS_MUSIC_REMOVE: "MPCS_MUSIC_REMOVE",
 
-    // Phase 2B - JSON Export/Import
+    // Phase 3 - JSON Export/Import
     MPCS_PROJECT_EXPORT_JSON: "MPCS_PROJECT_EXPORT_JSON",
     MPCS_PROJECTS_IMPORT_OPEN: "MPCS_PROJECTS_IMPORT_OPEN",
     MPCS_PROJECTS_IMPORT_FILE_PICK: "MPCS_PROJECTS_IMPORT_FILE_PICK",
@@ -255,18 +255,18 @@ export const ACTION_DESCRIPTIONS: Record<ActionId, string> = {
     MPCS_PREVIEW_ZOOM_RESET: "Preview Zoom Reset",
     MPCS_PREVIEW_FULLSCREEN_TOGGLE: "Toggle Preview Fullscreen",
 
-    // Phase 2B Placeholders
-    MPCS_PHASE2B_ANIMATIONS_PLACEHOLDER: "Toggle Animations (Phase 2B)",
-    MPCS_PHASE2B_AUDIO_PLACEHOLDER: "Toggle Audio Scoring (Phase 2B)",
-    MPCS_PHASE2B_JSON_PLACEHOLDER: "Export/Import JSON (Phase 2B)",
-    MPCS_PHASE2B_MUSIC_PLACEHOLDER: "Select Music (Phase 2B)",
+    // Phase 3 Placeholders
+    MPCS_PHASE2B_ANIMATIONS_PLACEHOLDER: "Toggle Animations (Phase 3)",
+    MPCS_PHASE2B_AUDIO_PLACEHOLDER: "Toggle Audio Scoring (Phase 3)",
+    MPCS_PHASE2B_JSON_PLACEHOLDER: "Export/Import JSON (Phase 3)",
+    MPCS_PHASE2B_MUSIC_PLACEHOLDER: "Select Music (Phase 3)",
 
-    // Phase 2B - Animations
+    // Phase 3 - Animations
     MPCS_ANIM_TYPE_CHANGE: "Change Animation Type",
     MPCS_ANIM_DURATION_CHANGE: "Adjust Animation Duration",
     MPCS_ANIM_TOGGLE_OVERRIDE: "Toggle Animation Override",
 
-    // Phase 2B - Audio Scoring
+    // Phase 3 - Audio Scoring
     MPCS_AUDIO_TOGGLE: "Toggle Preview Audio Scoring",
     MPCS_AUDIO_VOLUME_CHANGE: "Change Audio Volume",
     MPCS_AUDIO_UPLOAD_GOOD: "Upload Good SFX",
@@ -274,14 +274,14 @@ export const ACTION_DESCRIPTIONS: Record<ActionId, string> = {
     MPCS_AUDIO_TEST_GOOD: "Test Good SFX",
     MPCS_AUDIO_TEST_BAD: "Test Bad SFX",
 
-    // Phase 2B - Music
+    // Phase 3 - Music
     MPCS_MUSIC_UPLOAD: "Upload Background Music",
     MPCS_MUSIC_PLAY_PAUSE: "Toggle Music Playback",
     MPCS_MUSIC_VOLUME_CHANGE: "Change Music Volume",
     MPCS_MUSIC_LOOP_TOGGLE: "Toggle Music Loop",
     MPCS_MUSIC_REMOVE: "Remove Background Music",
 
-    // Phase 2B - JSON Export/Import
+    // Phase 3 - JSON Export/Import
     MPCS_PROJECT_EXPORT_JSON: "Export Project to JSON",
     MPCS_PROJECTS_IMPORT_OPEN: "Open Import Project Modal",
     MPCS_PROJECTS_IMPORT_DROP: "Drop File to Import",

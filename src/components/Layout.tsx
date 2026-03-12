@@ -72,8 +72,8 @@ export function Layout() {
                 </nav>
 
                 <div className="p-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
-                    <div className="text-xs text-slate-400 font-medium">MPCS • Phase 2B Preview</div>
-                    <div className="text-[10px] text-slate-300 dark:text-slate-500 mt-1">v0.2.0 • Phase 2B</div>
+                    <div className="text-xs text-slate-400 font-medium">MPCS • Phase 3</div>
+                    <div className="text-[10px] text-slate-300 dark:text-slate-500 mt-1">v0.3.0 • Phase 3</div>
                 </div>
             </aside>
 
@@ -91,7 +91,7 @@ export function Layout() {
 
                         <h1 className="text-lg md:text-xl font-semibold text-slate-800 dark:text-white truncate">{getPageTitle()}</h1>
                         <span className="hidden md:inline-flex px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-xs font-medium border border-blue-100 dark:border-blue-800 capitalize">
-                            Phase 2B Preview
+                            Phase 3
                         </span>
                     </div>
 

@@ -31,7 +31,7 @@
         scrollbar-color: #cbd5e1 transparent;
     }
 
-    /* Phase 2B Transitions */
+    /* Phase 3 Transitions */
     .anim-fade {
         animation: fade-in var(--anim-duration, 350ms) ease-out forwards;
     }
