@@ -15,7 +15,8 @@ import type { AspectRatio, AspectRatioPreset } from '../types/aspectRatio';
 import { formatAspectRatio } from '../types/aspectRatio';
 import { getDefaultAspectRatioSetting } from '../store/settingsStore';
 import PreviewStage from '../components/PreviewStage';
-import { Settings as SettingsIcon } from 'lucide-react';
+import { Settings as SettingsIcon, ChevronUp, ChevronDown } from 'lucide-react';
+import { getEffectivePages, duplicatePage, createDefaultPages } from '../lib/templatePages';
 
 export function Templates() {
     const { state, addTemplate, updateTemplate, deleteTemplate } = useAppStore();
@@ -50,13 +51,14 @@ export function Templates() {
             id: Math.random().toString(36).substring(2, 11),
             name: newTemplateName,
             placeholders: ['{PHONE_A}', '{PHONE_B}', '{WINNER}', '{SPEC}'],
-            sections: {
+            sections: { // Keeping for legacy compat, maybe we should remove it eventually
                 intro: '',
                 subintro: '',
                 body: '',
                 camera: '',
                 score: ''
             },
+            pages: createDefaultPages(),
             updatedAt: new Date().toISOString()
         };
         addTemplate(newTemplate);
@@ -97,6 +99,67 @@ export function Templates() {
         }
     };
 
+    const handleDuplicatePage = (pageId: string) => {
+        if (!selectedTemplate) return;
+        const currentPages = getEffectivePages(selectedTemplate);
+        const sourcePage = currentPages.find(p => p.id === pageId);
+        if (!sourcePage) return;
+
+        const newPage = duplicatePage(sourcePage, currentPages);
+        
+        // Insert right after the source page
+        const sourceIndex = currentPages.findIndex(p => p.id === pageId);
+        const newPages = [
+            ...currentPages.slice(0, sourceIndex + 1),
+            newPage,
+            ...currentPages.slice(sourceIndex + 1)
+        ];
+
+        updateTemplate({ ...selectedTemplate, pages: newPages, updatedAt: new Date().toISOString() });
+    };
+
+    const handleDeletePage = (pageId: string) => {
+        if (!selectedTemplate) return;
+        const currentPages = getEffectivePages(selectedTemplate);
+        const newPages = currentPages.filter(p => p.id !== pageId);
+        updateTemplate({ ...selectedTemplate, pages: newPages, updatedAt: new Date().toISOString() });
+    };
+
+    const handleReorderPage = (pageId: string, direction: 'up' | 'down') => {
+        if (!selectedTemplate) return;
+        const currentPages = getEffectivePages(selectedTemplate);
+        const idx = currentPages.findIndex(p => p.id === pageId);
+        if (idx === -1) return;
+        if (direction === 'up' && idx === 0) return;
+        if (direction === 'down' && idx === currentPages.length - 1) return;
+
+        const delta = direction === 'up' ? -1 : 1;
+        const newPages = [...currentPages];
+        const temp = newPages[idx];
+        newPages[idx] = newPages[idx + delta];
+        newPages[idx + delta] = temp;
+
+        updateTemplate({ ...selectedTemplate, pages: newPages, updatedAt: new Date().toISOString() });
+    };
+    
+    const handleBindModeChange = (pageId: string, mode: 'none' | 'rowIndex') => {
+        if (!selectedTemplate) return;
+        const currentPages = getEffectivePages(selectedTemplate);
+        const newPages = currentPages.map(p => 
+            p.id === pageId ? { ...p, dataBind: { ...p.dataBind, mode } } : p
+        );
+        updateTemplate({ ...selectedTemplate, pages: newPages, updatedAt: new Date().toISOString() });
+    };
+
+    const handleBindRowChange = (pageId: string, rowIndex: number) => {
+        if (!selectedTemplate) return;
+        const currentPages = getEffectivePages(selectedTemplate);
+        const newPages = currentPages.map(p => 
+            p.id === pageId ? { ...p, dataBind: { ...p.dataBind, rowIndex } } : p
+        );
+        updateTemplate({ ...selectedTemplate, pages: newPages, updatedAt: new Date().toISOString() });
+    };
+
     return (
         <div className="flex-1 flex flex-col min-h-0 p-4 md:p-8 overflow-y-auto lg:overflow-hidden">
             <div className="flex flex-col lg:flex-row gap-6 lg:h-full min-h-0">
@@ -131,7 +194,7 @@ export function Templates() {
                                     <p className={cn("font-medium truncate", selectedTemplateId === template.id ? "text-purple-900" : "text-slate-700")}>
                                         {template.name}
                                     </p>
-                                    <p className="text-xs text-slate-500">{Object.keys(template.sections).length} sections</p>
+                                    <p className="text-xs text-slate-500">{template.pages?.length || Object.keys(template.sections).length} pages</p>
                                 </div>
                                 <button
                                     className="p-2 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -162,7 +225,7 @@ export function Templates() {
                                         <h2 className="text-xl font-bold text-slate-900 truncate">{selectedTemplate.name}</h2>
                                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                                             <Badge variant="outline">{formatAspectRatio(aspectRatio)}</Badge>
-                                            <Badge variant="secondary">{Object.keys(selectedTemplate.sections).length} Scenes</Badge>
+                                            <Badge variant="secondary">{getEffectivePages(selectedTemplate).length} Pages</Badge>
                                         </div>
                                     </div>
                                     <div className="flex gap-2 shrink-0">
@@ -251,43 +314,115 @@ export function Templates() {
                                 <div>
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                                         <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Timeline Structure</h3>
-                                        <Button variant="secondary" size="sm" action={ACTIONS.MPCS_TEMPLATE_OPEN_BUILDER} onClick={() => navigate('/templates/builder')}>
-                                            Edit Structure
+                                        <Button variant="secondary" size="sm" action={ACTIONS.MPCS_TEMPLATE_OPEN_BUILDER} onClick={() => navigate(`/templates/${selectedTemplate.id}/builder`)}>
+                                            Open Visual Builder
                                         </Button>
                                     </div>
 
                                     <div className="space-y-3">
-                                        {Object.entries(selectedTemplate.sections).map(([name, content], idx) => (
-                                            <div key={idx} className="flex flex-col sm:flex-row sm:items-center p-4 bg-slate-50 rounded-lg border border-slate-100 gap-3">
-                                                <div className="flex items-center">
-                                                    <div className="w-6 h-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs font-medium mr-4 shrink-0">
-                                                        {idx + 1}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="font-medium text-slate-700 capitalize">{name}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-xs text-slate-500 truncate">{content || '(Empty content)'}</p>
-                                                </div>
-                                                <div className="flex gap-2 shrink-0 sm:justify-end">
-                                                    {['intro', 'score'].includes(name.toLowerCase()) ? (
-                                                        <Badge variant="warning" className="text-[10px]">Static</Badge>
-                                                    ) : (
-                                                        <div className="flex gap-1">
-                                                            <Badge variant="secondary" className="text-[10px]">{'{PHONE_A}'}</Badge>
-                                                            <Badge variant="secondary" className="text-[10px]">{'{PHONE_B}'}</Badge>
+                                        {getEffectivePages(selectedTemplate).map((page, idx, allPages) => {
+                                            const groupCount = allPages.filter(p => p.duplicateGroupId === page.duplicateGroupId).length;
+                                            return (
+                                            <div key={page.id} className="flex flex-col p-4 bg-slate-50 rounded-lg border border-slate-100 gap-3">
+                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                                    <div className="flex items-center">
+                                                        <div className="w-6 h-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs font-medium mr-4 shrink-0">
+                                                            {idx + 1}
                                                         </div>
-                                                    )}
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="font-bold text-slate-700 capitalize">{page.label}</p>
+                                                                {page.duplicateIndex > 0 && <Badge variant="outline" className="text-[10px] bg-slate-100">Duplicate</Badge>}
+                                                            </div>
+                                                            <div className="flex items-center gap-2 mt-0.5">
+                                                                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">{page.baseType}</span>
+                                                                <span className="text-[10px] text-slate-400">•</span>
+                                                                <span className="text-[10px] text-slate-400">{page.timing.durationMs}ms</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-1 shrink-0">
+                                                        <button 
+                                                            className="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors disabled:opacity-30 disabled:hover:text-slate-400 disabled:hover:bg-transparent"
+                                                            onClick={() => handleReorderPage(page.id, 'up')}
+                                                            disabled={idx === 0}
+                                                            title="Move Up"
+                                                            data-action={ACTIONS.MPCS_TEMPLATE_PAGE_REORDER_UP}
+                                                        >
+                                                            <ChevronUp className="w-4 h-4" />
+                                                        </button>
+                                                        <button 
+                                                            className="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors disabled:opacity-30 disabled:hover:text-slate-400 disabled:hover:bg-transparent"
+                                                            onClick={() => handleReorderPage(page.id, 'down')}
+                                                            disabled={idx === allPages.length - 1}
+                                                            title="Move Down"
+                                                            data-action={ACTIONS.MPCS_TEMPLATE_PAGE_REORDER_DOWN}
+                                                        >
+                                                            <ChevronDown className="w-4 h-4" />
+                                                        </button>
+                                                        <div className="w-px h-6 bg-slate-200 mx-1 self-center" />
+                                                        <Button variant="secondary" size="sm" onClick={() => handleDuplicatePage(page.id)} data-action={ACTIONS.MPCS_TEMPLATE_PAGE_DUPLICATE}>
+                                                            <Copy className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                        {page.duplicateIndex > 0 && (
+                                                            <Button variant="danger" size="sm" onClick={() => handleDeletePage(page.id)} data-action={ACTIONS.MPCS_TEMPLATE_PAGE_DELETE_DUPLICATE}>
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                            </Button>
+                                                        )}
+                                                        <div className="w-px h-6 bg-slate-200 mx-1 self-center" />
+                                                        <Button variant="primary" size="sm" onClick={() => navigate(`/templates/${selectedTemplate.id}/builder/${page.id}`)} data-action={ACTIONS.MPCS_TEMPLATE_BUILDER_PAGE_SELECT}>
+                                                            Edit
+                                                        </Button>
+                                                    </div>
                                                 </div>
+                                                
+                                                {/* Duplicate / Data Bind Controls */}
+                                                {(page.duplicateIndex > 0 || groupCount > 1) && (
+                                                    <div className="mt-2 pt-3 border-t border-slate-200 flex items-center justify-between text-xs">
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="font-semibold text-slate-600">Data Row Binding:</span>
+                                                            <select 
+                                                                className="px-2 py-1 rounded border border-slate-300 bg-white"
+                                                                value={page.dataBind.mode}
+                                                                onChange={(e) => handleBindModeChange(page.id, e.target.value as 'none' | 'rowIndex')}
+                                                                data-action={ACTIONS.MPCS_TEMPLATE_PAGE_BIND_MODE_CHANGE}
+                                                            >
+                                                                <option value="none">None</option>
+                                                                <option value="rowIndex">Specific Row</option>
+                                                            </select>
+                                                            
+                                                            {page.dataBind.mode === 'rowIndex' && (
+                                                                <div className="flex items-center gap-2">
+                                                                    <span>Row #</span>
+                                                                    <input 
+                                                                        type="number" 
+                                                                        min="0"
+                                                                        className="w-16 px-2 py-1 rounded border border-slate-300 bg-white"
+                                                                        value={page.dataBind.rowIndex ?? ''}
+                                                                        onChange={(e) => handleBindRowChange(page.id, parseInt(e.target.value) || 0)}
+                                                                        data-action={ACTIONS.MPCS_TEMPLATE_PAGE_BIND_ROW_CHANGE}
+                                                                    />
+                                                                    <span className="text-slate-400 italic flex items-center gap-1">
+                                                                        (0-based offset)
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                            {page.dataBind.mode === 'rowIndex' && page.baseType === 'body' && (
+                                                                <Badge variant="outline" className="text-[9px] bg-blue-50 text-blue-700 border-blue-200 ml-2">
+                                                                    Body Spec Match
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
-                                        ))}
+                                        )})}
                                     </div>
                                 </div>
                             </div>
 
                             <div className="p-4 bg-slate-50 border-t border-slate-100 shrink-0 flex justify-center">
-                                <Button action={ACTIONS.MPCS_TEMPLATE_OPEN_BUILDER} onClick={() => navigate('/templates/builder')} className="w-full md:w-auto">
+                                <Button action={ACTIONS.MPCS_TEMPLATE_OPEN_BUILDER} onClick={() => navigate(`/templates/${selectedTemplate.id}/builder`)} className="w-full md:w-auto">
                                     Open Visual Editor
                                 </Button>
                             </div>

@@ -1,4 +1,4 @@
-import { Palette, Database, Shield, Moon, Sun, ArrowRight, Save, Maximize2, X, Film } from 'lucide-react';
+import { Palette, Database, Shield, Moon, Sun, ArrowRight, Save, Maximize2, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -14,8 +14,6 @@ import {
     getAppearanceSetting,
     saveAppearanceSetting,
     Appearance,
-    getPhase3Enabled,
-    savePhase3Enabled,
 } from '../store/settingsStore';
 import { applyAppearance } from '../theme/applyTheme';
 import {
@@ -46,9 +44,6 @@ export function Settings() {
     const [audioSettings, setAudioSettings] = useState<AudioSettingsType>(() => getAudioSettings());
     const [audioAssets, setAudioAssets] = useState<AudioAssets>(() => getAudioAssets());
 
-    // Phase 3 State
-    const [phase3Enabled, setPhase3Enabled] = useState(() => getPhase3Enabled());
-
     useEffect(() => {
         const loaded = getDefaultAspectRatioSetting();
         setAspectRatio(loaded);
@@ -62,7 +57,6 @@ export function Settings() {
         saveAudioSettings(audioSettings);
         saveAppearanceSetting(appearance);
         applyAppearance(appearance);
-        savePhase3Enabled(phase3Enabled);
         toast("Settings saved successfully", "success");
     };
 
@@ -587,56 +581,6 @@ export function Settings() {
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </Card>
-
-                    {/* Phase 3 – Visual Editor & Export */}
-                    <Card>
-                        <div className="flex items-start gap-4">
-                            <div className="p-3 rounded-lg bg-violet-50 text-violet-600">
-                                <Film className="w-6 h-6" />
-                            </div>
-                            <div className="flex-1 space-y-4">
-                                <div>
-                                    <h3 className="text-lg font-semibold text-slate-900 mb-1">Phase 3: Visual Editor &amp; Remotion Export</h3>
-                                    <p className="text-sm text-slate-500">
-                                        Enable the drag-and-drop visual editor and real MP4 export via a local Remotion render server.
-                                    </p>
-                                </div>
-
-                                {/* Feature flag toggle */}
-                                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                    <div>
-                                        <p className="font-semibold text-slate-900 text-sm">Enable Visual Editor &amp; Remotion Export</p>
-                                        <p className="text-xs text-slate-500">When disabled, the WebM quick export and preview player still work normally.</p>
-                                    </div>
-                                    <button
-                                        onClick={() => setPhase3Enabled(v => !v)}
-                                        className={cn(
-                                            "w-12 h-6 rounded-full transition-colors relative flex items-center px-1 shrink-0 ml-4",
-                                            phase3Enabled ? "bg-violet-500" : "bg-slate-300"
-                                        )}
-                                    >
-                                        <div className={cn(
-                                            "w-4 h-4 bg-white rounded-full transition-transform shadow-sm",
-                                            phase3Enabled ? "translate-x-6" : "translate-x-0"
-                                        )} />
-                                    </button>
-                                </div>
-
-                                {/* Render server URL replaced with Browser Export note */}
-                                {phase3Enabled && (
-                                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <Film className="w-5 h-5 text-slate-500" />
-                                            <p className="font-semibold text-slate-900 text-sm">Browser Export (WebM)</p>
-                                        </div>
-                                        <p className="text-sm text-slate-600">
-                                            Export videos directly from your browser. Works on any device without the need for a local render server or external API.
-                                        </p>
-                                    </div>
-                                )}
                             </div>
                         </div>
                     </Card>

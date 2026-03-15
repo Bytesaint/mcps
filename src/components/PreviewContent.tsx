@@ -4,6 +4,7 @@ import { Trophy, AlertTriangle } from 'lucide-react';
 import { compareSpecs } from '../engine/compareAdvanced';
 import PhoneCutout from '../preview/components/PhoneCutout';
 import { getEffectiveScene } from '../preview/sceneMerge';
+import { SceneLayoutRenderer } from '../render/SceneLayoutRenderer';
 
 interface PreviewContentProps {
     sceneKey: string;
@@ -31,12 +32,27 @@ export default function PreviewContent({
         </div>
     );
 
+    // If we have a Scene object, use its effective values for overrides
+    const effectiveScene = scene ? getEffectiveScene(scene) : null;
+    
+    // Phase 3: Use SceneLayoutRenderer if a layout exists
+    if (effectiveScene?.effective?.layout) {
+        return (
+            <SceneLayoutRenderer
+                layout={effectiveScene.effective.layout}
+                placeholderMap={effectiveScene.effective.text || {}}
+                phoneAUrl={phoneA?.image?.dataUrl}
+                phoneBUrl={phoneB?.image?.dataUrl}
+                width="100%"
+                height="100%"
+            />
+        );
+    }
+
     // Determine winner if it's a body scene
     let winner: 'A' | 'B' | 'TIE' | null = null;
     let reason = "";
-
-    // If we have a Scene object, use its effective values for overrides
-    const effectiveScene = scene ? getEffectiveScene(scene) : null;
+    
     const effectiveWinner = effectiveScene?.effective.winner;
 
     // Detect scene types

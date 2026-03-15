@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Smartphone, LayoutTemplate, ArrowRight, ArrowLeft, CheckCircle, Music2, Sparkles } from 'lucide-react';
+import { Smartphone, LayoutTemplate, ArrowRight, ArrowLeft, CheckCircle, Music2, Sparkles, AlertTriangle } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Stepper } from '../components/Stepper';
@@ -19,6 +19,7 @@ import { useVideoPreviewPlayer } from '../preview/player/useVideoPreviewPlayer';
 import { PlayerBar } from '../preview/player/PlayerBar';
 import { SceneInspector } from '../components/SceneInspector';
 import { generateScenes } from '../engine/projectLogic';
+import { getEffectivePages } from '../lib/templatePages';
 
 const STEPS = ['Select Template', 'Select Phones', 'Preview & Save'];
 
@@ -195,31 +196,84 @@ export function Generate() {
     }, []);
 
     const renderStep1 = () => (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {state.templates.map(t => (
-                <div
-                    key={t.id}
-                    onClick={() => setSelectedTemplateId(t.id)}
-                    data-action={ACTIONS.MPCS_GENERATE_SELECT_TEMPLATE}
-                    className={cn(
-                        "p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md",
-                        selectedTemplateId === t.id
-                            ? "border-blue-500 bg-blue-50/50"
-                            : "border-slate-200 bg-white hover:border-blue-200"
-                    )}
-                >
-                    <div className="aspect-video bg-slate-100 rounded-lg mb-3 flex items-center justify-center text-slate-400">
-                        <LayoutTemplate className="w-8 h-8 opacity-50" />
+        <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {state.templates.map(t => {
+                    const pages = getEffectivePages(t);
+                    return (
+                    <div
+                        key={t.id}
+                        onClick={() => setSelectedTemplateId(t.id)}
+                        data-action={ACTIONS.MPCS_GENERATE_SELECT_TEMPLATE}
+                        className={cn(
+                            "p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md",
+                            selectedTemplateId === t.id
+                                ? "border-blue-500 bg-blue-50/50"
+                                : "border-slate-200 bg-white hover:border-blue-200"
+                        )}
+                    >
+                        <div className="aspect-video bg-slate-100 rounded-lg mb-3 flex items-center justify-center text-slate-400">
+                            <LayoutTemplate className="w-8 h-8 opacity-50" />
+                        </div>
+                        <h3 className="font-semibold text-slate-900">{t.name}</h3>
+                        <p className="text-sm text-slate-500">{pages.length} Pages</p>
                     </div>
-                    <h3 className="font-semibold text-slate-900">{t.name}</h3>
-                    <p className="text-sm text-slate-500">{Object.keys(t.sections).length} Sections</p>
-                </div>
-            ))}
-        </div>
+                )})}
+            </div>
+            {template && (() => {
+                const pages = getEffectivePages(template);
+                const bodyPages = pages.filter(p => p.baseType === 'body');
+                const isDuplicateMode = bodyPages.some(p => p.duplicateIndex > 0);
+                return (
+                    <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between">
+                        <div>
+                            <h4 className="font-semibold text-slate-800">Generation Mode</h4>
+                            <p className="text-sm text-slate-500">
+                                {isDuplicateMode 
+                                    ? "Uses specific body pages for each spec comparison."
+                                    : "Automatically loops its single body page for all common specs."}
+                            </p>
+                        </div>
+                        <span className={cn(
+                            "px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full",
+                            isDuplicateMode ? "bg-emerald-100 text-emerald-800 border border-emerald-200" : "bg-blue-100 text-blue-800 border border-blue-200"
+                        )}>
+                            {isDuplicateMode ? "Body Duplicate Mode" : "Auto Loop Mode"}
+                        </span>
+                    </div>
+                );
+            })()}
+        </>
     );
 
-    const renderStep2 = () => (
+    const renderStep2 = () => {
+        const pages = template ? getEffectivePages(template) : [];
+        const bodyPages = pages.filter(p => p.baseType === 'body');
+        const isDuplicateMode = bodyPages.some(p => p.duplicateIndex > 0);
+        
+        const phoneA = state.phones.find(p => p.id === phoneAId);
+        const phoneB = state.phones.find(p => p.id === phoneBId);
+        const rules = state.rules;
+
+        const specRowsCount = rules.filter(rule => {
+            const specA = phoneA?.specs.find(s => s.key === rule.specKey)?.value;
+            const specB = phoneB?.specs.find(s => s.key === rule.specKey)?.value;
+            return (specA && specA !== "N/A") || (specB && specB !== "N/A");
+        }).length;
+
+        const showWarning = phoneA && phoneB && isDuplicateMode && bodyPages.length > specRowsCount;
+
+        return (
         <div className="max-w-2xl mx-auto space-y-8">
+            {showWarning && (
+                <div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-sm flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+                    <div>
+                        <strong className="block mb-1">Warning: Not enough specs</strong>
+                        <p>This template has {bodyPages.length} body pages, but the selected phones only have {specRowsCount} common specs. The extra scenes will output 'N/A'.</p>
+                    </div>
+                </div>
+            )}
             <div className="grid grid-cols-2 gap-8 items-center">
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-slate-700">Phone A (Left)</label>
@@ -293,12 +347,13 @@ export function Generate() {
                 />
             </div>
         </div>
-    );
+        );
+    };
 
     const effectiveAnimation: AnimationSettings = activeScene?.override?.transition
         ? {
-            type: activeScene.override.transition.type,
-            durationMs: activeScene.override.transition.durationMs ?? 350
+            type: activeScene.override!.transition!.type,
+            durationMs: activeScene.override!.transition!.durationMs ?? 350
         }
         : animationSettings;
 

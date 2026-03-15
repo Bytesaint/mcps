@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FolderOpen, Eye, Trash2, Download, Calendar, Maximize2, AlertTriangle } from 'lucide-react';
+import { FolderOpen, Eye, Trash2, Download, Calendar, Maximize2, AlertTriangle, Film } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Modal } from '../components/Modal';
@@ -14,6 +14,7 @@ import { ImportDropZone } from '../components/ImportDropZone';
 import { readJsonFile } from '../utils/readJsonFile';
 import { validateProjectJson } from '../utils/validateProjectJson';
 import type { Project } from '../types/models';
+import { ExportModal } from '../features/export/ExportModal';
 
 export function Projects() {
     const { state, deleteProject, addProject, updateProject } = useAppStore();
@@ -23,6 +24,9 @@ export function Projects() {
     // Delete Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deleteProjectId, setDeleteProjectId] = useState<string | null>(null);
+
+    // Export Modal State
+    const [exportProject, setExportProject] = useState<Project | null>(null);
 
     // Import Modal State
     const [importCandidate, setImportCandidate] = useState<Project | null>(null);
@@ -182,6 +186,14 @@ export function Projects() {
                                         </Button>
                                         <Button
                                             size="sm"
+                                            variant="primary"
+                                            onClick={(e) => { e.stopPropagation(); setExportProject(project); }}
+                                            title="Export Video"
+                                        >
+                                            <Film className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            size="sm"
                                             variant="secondary"
                                             action={ACTIONS.MPCS_PROJECTS_EXPORT}
                                             onClick={() => handleExport(project)}
@@ -269,6 +281,14 @@ export function Projects() {
                     </p>
                 </div>
             </Modal>
+
+            {exportProject && (
+                <ExportModal
+                    project={exportProject}
+                    isOpen={!!exportProject}
+                    onClose={() => setExportProject(null)}
+                />
+            )}
         </div>
     );
 }

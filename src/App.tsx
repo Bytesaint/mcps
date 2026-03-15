@@ -15,6 +15,7 @@ import { initThemeListener } from './lib/theme';
 import { EditorLayout } from './features/editor/EditorLayout';
 import { applyAppearance } from './theme/applyTheme';
 import { getAppearanceSetting } from './store/settingsStore';
+import { TemplateBuilder } from './pages/TemplateBuilder';
 
 // Initialize seed data on app load
 ensureSeedData();
@@ -29,21 +30,13 @@ function App() {
             <AppStoreProvider>
                 <Router>
                     <Routes>
+                        <Route path="/templates/:templateId/builder" element={<TemplateBuilder />} />
+                        <Route path="/templates/:templateId/builder/:pageId" element={<TemplateBuilder />} />
                         <Route element={<Layout />}>
                             <Route path="/" element={<Dashboard />} />
                             <Route path="/phones" element={<Phones />} />
                             <Route path="/rules" element={<Rules />} />
                             <Route path="/templates" element={<Templates />} />
-                            <Route path="/templates/builder" element={
-                                <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-                                    <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 text-slate-300">
-                                        <span className="text-3xl font-bold">P3</span>
-                                    </div>
-                                    <h2 className="text-2xl font-bold text-slate-800 mb-2">Visual Builder Coming Soon</h2>
-                                    <p className="text-slate-500 max-w-md">Phase 3 includes a drag-and-drop template editor with live preview.</p>
-                                    <p className="mt-8 text-xs text-slate-400">MPCS Phase 3</p>
-                                </div>
-                            } />
                             <Route path="/generate" element={<Generate />} />
                             <Route path="/projects" element={<Projects />} />
                             <Route path="/projects/:id" element={<ProjectDetail />} />

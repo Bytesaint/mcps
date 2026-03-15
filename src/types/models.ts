@@ -39,13 +39,28 @@ export interface TemplateSections {
     score: string;
 }
 
+export interface TemplatePage {
+    id: string;
+    baseType: 'intro' | 'subintro' | 'body' | 'camera' | 'score';
+    label: string;
+    duplicateGroupId: string;
+    duplicateIndex: number;
+    dataBind: {
+        mode: 'none' | 'rowIndex';
+        rowIndex?: number;
+    };
+    layout: SceneLayout;
+    timing: SceneTiming;
+}
+
 export interface Template {
     id: string;
     name: string;
     aspectRatio?: AspectRatio;
     useAspectRatioOverride?: boolean;
     placeholders: string[];
-    sections: TemplateSections;
+    sections: TemplateSections; // Legacy compat
+    pages?: TemplatePage[]; // Phase 3
     updatedAt: string; // ISO string
 }
 
@@ -200,6 +215,7 @@ export interface SceneOverride {
 
     // Phase 3: Visual Editor
     layout?: SceneLayout;
+    timing?: SceneTiming; // Phase 3 template building integration
     motion?: {
         type: "none" | "kenburns";
         kenburns?: KenBurnsEffect;
@@ -224,6 +240,8 @@ export interface Scene {
     label: string;
     auto: SceneAutoData;
     override?: SceneOverride;
+    timing?: SceneTiming; // Optional global timing (Phase 3 mostly relies on this)
+    templatePageId?: string; // Phase 3
 }
 
 export interface ProjectScene extends Scene {

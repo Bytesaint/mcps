@@ -1,0 +1,1 @@
+﻿src/engine/projectLogic.ts(1,40): error TS6133: 'SceneType' is declared but its value is never read.

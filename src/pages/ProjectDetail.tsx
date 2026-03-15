@@ -124,8 +124,7 @@ export function ProjectDetail() {
                             variant="secondary"
                             size="sm"
                             action={ACTIONS.MPCS_PROJECTS_EDIT}
-                            disabled
-                            title="Coming in Phase 3"
+                            onClick={() => navigate(`/editor/${project.id}`)}
                         >
                             <Edit2 className="w-4 h-4 mr-2" /> Edit
                         </Button>

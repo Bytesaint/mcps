@@ -11,24 +11,27 @@ interface RenderContext {
     fps: number;
 }
 
-// Helper: Resolve placeholders (simple version)
 function resolveText(content: string, _project: Project, scene: ProjectScene): string {
-    // This is a simplified placeholder resolver. 
-    // In a real app we'd parse {{phoneA.name}} etc.
     let text = content;
 
-    // Example replacements (expand as needed)
-    // text = text.replace('{{phoneA.name}}', project.phoneAId ...);
-    // For now we just return content as-is or handle simple overrides if we had the full phone data
-    // But RenderContext doesn't currently include the full Phone objects, just the Project. 
-    // We might need to pass resolved data or fetch it.
-    // For Phase 3 MVP, let's assume the Editor resolves these or we pass them in.
+    // Resolve Phase 3 placeholders
+    const placeholders = scene.auto?.placeholders || {};
+    Object.keys(placeholders).forEach(key => {
+        text = text.replace(new RegExp(key, 'g'), placeholders[key]);
+    });
 
-    // Actually, SceneAutoData has specA, specB, etc.
+    // Fallback for Phase 2 format
     if (scene.auto) {
-        if (content === '{{specA}}') return scene.auto.specA || '';
-        if (content === '{{specB}}') return scene.auto.specB || '';
-        if (content === '{{winner}}') return scene.auto.winner || '';
+        if (content === '{SPEC_A}') return scene.auto.specA || '';
+        if (content === '{SPEC_B}') return scene.auto.specB || '';
+        if (content === '{WINNER}') return scene.auto.winner || '';
+    }
+
+    // Check for explicit overrides from user in inspector
+    if (scene.override?.text) {
+        // e.g. override.text might map element IDs to custom text, but for simple MVP
+        // we assume content is already the overridden text if it was replaced.
+        // If content is an ID, we'd lookup here. Let's assume content is the actual text string.
     }
 
     return text;

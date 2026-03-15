@@ -1,6 +1,7 @@
-import { Template, Phone, Rule, Scene, SceneType } from '../types/models';
+import { Template, Phone, Rule, Scene } from '../types/models';
 import { compareSpecs } from './compareAdvanced';
 import { getEffectiveScene } from '../preview/sceneMerge';
+import { getEffectivePages } from '../lib/templatePages';
 
 export function generateScenes(
     template: Template,
@@ -9,81 +10,141 @@ export function generateScenes(
     rules: Rule[],
     overrides: Record<string, any> = {} // ID -> SceneOverride
 ): Scene[] {
-    const sections = template.sections;
-    const sceneKeys = Object.keys(sections);
+    const pages = getEffectivePages(template);
 
-    // 1. Initial Pass: Create Scenes with Auto Data
-    let scenes: Scene[] = sceneKeys.map((key) => {
-        // const type = key as SceneType; // Simplified assumption for now
-
-        // Determine scene type more accurately based on naming conventions if needed
-        // For now, key is often 'intro', 'body1', etc. 
-        // But in current template checks:
-        const isIntro = key === 'intro';
-        const isSubintro = key === 'subintro';
-        const isScore = key === 'score';
-        const isCamera = key.toLowerCase().includes('camera');
-        const isBody = !isIntro && !isSubintro && !isScore;
-
-        let actualType: SceneType = 'body';
-        if (isIntro) actualType = 'intro';
-        else if (isSubintro) actualType = 'subintro';
-        else if (isScore) actualType = 'score';
-        else if (isCamera) actualType = 'camera';
-
-        // Calculate Auto Data
-        let autoData: any = {
-            placeholders: {} // Populate from template placeholders if we had them mapped
-        };
-
-        if (isBody) {
-            const rule = rules.find(r => r.id === key || r.specKey === key);
-            // Logic from PreviewContent to find specs
-            const specA = phoneA.specs.find(s => s.key === rule?.specKey || s.key === key)?.value || "";
-            const specB = phoneB.specs.find(s => s.key === rule?.specKey || s.key === key)?.value || "";
-
-            let winner: "A" | "B" | "TIE" | null = null;
-            if (rule) {
-                winner = compareSpecs(specA, specB, rule).winner;
-            }
-
-            autoData = {
-                ...autoData,
-                specKey: rule?.specKey || key,
-                specLabel: rule?.specKey || key, // Should get nice label
-                specA,
-                specB,
-                winner
-            };
+    // Filter rules missing in either phone's specs, or just map them
+    const dataRows = rules.map(rule => {
+        const specAItem = phoneA.specs.find(s => s.key === rule.specKey);
+        const specBItem = phoneB.specs.find(s => s.key === rule.specKey);
+        const specA = specAItem?.value || "N/A";
+        const specB = specBItem?.value || "N/A";
+        // Also find label
+        const specLabel = specAItem?.label || specBItem?.label || rule.specKey;
+        
+        let winner: "A" | "B" | "TIE" | null = null;
+        if (specA !== "N/A" && specB !== "N/A") {
+            winner = compareSpecs(specA, specB, rule).winner;
         }
 
         return {
-            id: key,
-            type: actualType,
-            label: key.charAt(0).toUpperCase() + key.slice(1),
-            auto: autoData,
-            override: overrides[key]
+            specKey: rule.specKey,
+            specLabel,
+            specA,
+            specB,
+            winner
         };
-    });
+    }).filter(row => row.specA !== "N/A" || row.specB !== "N/A"); // Basic filtering
+
+    // Determine Mode
+    const bodyPages = pages.filter(p => p.baseType === 'body');
+    const isDuplicateMode = bodyPages.some(p => p.duplicateIndex > 0);
+    
+    let generatedScenes: Scene[] = [];
+    
+    // 1. Initial Pass: Create Scenes from Pages
+    for (const page of pages) {
+        if (page.baseType !== 'body') {
+            // Intro, Camera, Subintro, Score
+            generatedScenes.push({
+                id: crypto.randomUUID(),
+                type: page.baseType,
+                label: page.label,
+                templatePageId: page.id,
+                auto: {
+                    placeholders: {
+                        '{PHONE_A}': phoneA.name,
+                        '{PHONE_B}': phoneB.name
+                    }
+                },
+                timing: page.timing,
+                override: overrides[page.id] // Use page.id or existing UUID lookup
+            });
+            continue;
+        }
+
+        // Body pages
+        if (isDuplicateMode) {
+            // Use explicit templates binding
+            let rowIdx: number | undefined;
+            if (page.dataBind.mode === 'rowIndex') {
+                rowIdx = page.dataBind.rowIndex;
+            } else {
+                // Auto sequential based on duplicate index
+                rowIdx = page.duplicateIndex;
+            }
+
+            const row = (rowIdx !== undefined && rowIdx < dataRows.length) ? dataRows[rowIdx] : null;
+
+            generatedScenes.push({
+                id: crypto.randomUUID(),
+                type: 'body',
+                label: page.label,
+                templatePageId: page.id,
+                timing: page.timing,
+                auto: {
+                    specKey: row?.specKey || 'unknown',
+                    specLabel: row?.specLabel || 'N/A',
+                    specA: row?.specA || 'N/A',
+                    specB: row?.specB || 'N/A',
+                    winner: row?.winner || null,
+                    description: row ? '' : 'Row out of range',
+                    placeholders: {
+                        '{PHONE_A}': phoneA.name,
+                        '{PHONE_B}': phoneB.name,
+                        '{SPEC_NAME}': row?.specLabel || 'N/A',
+                        '{SPEC_A}': row?.specA || 'N/A',
+                        '{SPEC_B}': row?.specB || 'N/A',
+                        '{WINNER}': row?.winner === 'A' ? phoneA.name : row?.winner === 'B' ? phoneB.name : row?.winner === 'TIE' ? 'Tie' : 'N/A'
+                    }
+                },
+                override: overrides[page.id]
+            });
+        } else {
+            // Auto Loop Fallback Mode
+            // Generate one scene per spec row using this single body template page
+            for (let i = 0; i < dataRows.length; i++) {
+                const row = dataRows[i];
+                generatedScenes.push({
+                    id: crypto.randomUUID(),
+                    type: 'body',
+                    label: `${page.label} - ${row.specLabel}`,
+                    templatePageId: page.id,
+                    timing: page.timing,
+                    auto: {
+                        specKey: row.specKey,
+                        specLabel: row.specLabel,
+                        specA: row.specA,
+                        specB: row.specB,
+                        winner: row.winner,
+                        placeholders: {
+                            '{PHONE_A}': phoneA.name,
+                            '{PHONE_B}': phoneB.name,
+                            '{SPEC_NAME}': row.specLabel,
+                            '{SPEC_A}': row.specA,
+                            '{SPEC_B}': row.specB,
+                            '{WINNER}': row.winner === 'A' ? phoneA.name : row.winner === 'B' ? phoneB.name : row.winner === 'TIE' ? 'Tie' : 'N/A'
+                        }
+                    },
+                    override: overrides[page.id] // Note: all cloned scenes share same templateId and potentially override ID mapping
+                });
+            }
+        }
+    }
 
     // 2. Score Calculation Pass
-    // We need to calculate scores based on the *effective* winner of each body scene
     let scoreA = 0;
     let scoreB = 0;
 
-    // We used to rely on PreviewContent to calc on fly, now we need to persist it.
-    // Let's iterate body scenes
-    scenes.forEach(scene => {
+    generatedScenes.forEach(scene => {
         if (scene.type === 'body') {
             const effective = getEffectiveScene(scene).effective;
             if (effective.winner === 'A') scoreA++;
             else if (effective.winner === 'B') scoreB++;
-            // TIE gives 0 to both usually, or we can configure
         }
     });
 
-    // 3. Update Score Scene
-    scenes = scenes.map(scene => {
+    // 3. Update Score Scene properties & placeholders
+    generatedScenes = generatedScenes.map(scene => {
         if (scene.type === 'score') {
             const autoWinner = scoreA > scoreB ? 'A' : scoreB > scoreA ? 'B' : 'TIE';
             return {
@@ -92,12 +153,18 @@ export function generateScenes(
                     ...scene.auto,
                     scoreA,
                     scoreB,
-                    winner: autoWinner
+                    winner: autoWinner,
+                    placeholders: {
+                        ...scene.auto.placeholders,
+                        '{SCORE_A_TOTAL}': String(scoreA),
+                        '{SCORE_B_TOTAL}': String(scoreB),
+                        '{WINNER}': autoWinner === 'A' ? phoneA.name : autoWinner === 'B' ? phoneB.name : autoWinner === 'TIE' ? 'Tie' : 'N/A'
+                    }
                 }
             };
         }
         return scene;
     });
 
-    return scenes;
+    return generatedScenes;
 }

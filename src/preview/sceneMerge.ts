@@ -32,6 +32,7 @@ export function getEffectiveScene(scene: Scene) {
             text: mergedText,
             winner: effectiveWinner,
             media: scene.override?.media,
+            layout: scene.override?.layout,
         }
     };
 }
